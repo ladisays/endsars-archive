@@ -1,62 +1,64 @@
-import Head from 'next/head';
-import styles from '../styles/Home.module.css';
+import { useState } from 'react';
+import Container from 'react-bootstrap/Container';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
+import Jumbotron from 'react-bootstrap/Jumbotron';
+import Button from 'react-bootstrap/Button';
 
-export default function Home() {
+import { getStories } from 'lib/stories';
+import { NewStory, StoryItem } from 'components/Stories';
+
+export const getStaticProps = async ({ params }) => {
+  let stories = [];
+  let error = null;
+
+  try {
+    stories = await getStories(params);
+  } catch (err) {
+    console.log(err);
+    error = err;
+  }
+
+  return {
+    props: { stories, error },
+    revalidate: 1
+  };
+};
+
+const Home = ({ stories, error }) => {
+  const [show, setShow] = useState(false);
+  const handleClose = () => setShow(false);
+  const handleOpen = () => setShow(true);
+
   return (
-    <div className={styles.container}>
-      <Head>
-        <title>Create Next App</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
-
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
-
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}>
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}>
-            <h3>Deploy &rarr;</h3>
+    <Container>
+      <Row>
+        <Col className="p-3">
+          <Jumbotron>
+            <h1>Help End Police Brutality in Nigeria!</h1>
             <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
+              Share your story about police brutality in Nigeria. Help keep
+              documentation by sharing your photos or videos from protests.
             </p>
-          </a>
-        </div>
-      </main>
-
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer">
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className={styles.logo} />
-        </a>
-      </footer>
-    </div>
+            <p>
+              <Button onClick={handleOpen}>Share your story</Button>
+            </p>
+          </Jumbotron>
+        </Col>
+      </Row>
+      <Row>
+        <Col>
+          {error && <div>An error occurred while loading stories</div>}
+          {stories.length ? (
+            stories.map((story) => <StoryItem key={story.id} {...story} />)
+          ) : (
+            <div>There are no stories currently available</div>
+          )}
+        </Col>
+      </Row>
+      {show && <NewStory show={show} onHide={handleClose} />}
+    </Container>
   );
-}
+};
+
+export default Home;
