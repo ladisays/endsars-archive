@@ -13,7 +13,7 @@ try {
         privateKey: privateKey.replace(/\\n/g, '\n')
       }),
       databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
-      storageBucket: process.env.FIREBASE_STORAGE_BUCKET
+      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
     });
   }
 } catch (e) {
