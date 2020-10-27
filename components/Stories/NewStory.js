@@ -4,59 +4,82 @@ import Modal from 'react-bootstrap/Modal';
 import axios from 'axios';
 import { object, string } from 'yup';
 
+import { initFirebase, storageRef } from 'utils/firebase';
 import Form from 'components/Form';
 import useSubmit from 'hooks/useSubmit';
+import MediaButton from './MediaButton';
 import styles from './new-story.module.sass';
+
+initFirebase();
+
+export const uploadFile = (source) =>
+  new Promise((resolve) => {
+    let ref;
+    const mediaRef = storageRef().child('media');
+    const imagesRef = mediaRef.child('images');
+    const videosRef = mediaRef.child('videos');
+
+    if (source.file.type.startsWith('image/')) {
+      ref = imagesRef.child(source.file.name);
+    } else if (source.file.type.startsWith('video/')) {
+      ref = videosRef.child(source.file.name);
+    }
+
+    const task = ref.put(source.file);
+    task.on('state_changed', (snapshot) => {
+      const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+      console.log(source.file.name, `Upload is ${progress}% done`);
+    });
+    resolve({ ref, task });
+  });
 
 const validationSchema = object().shape({
   text: string()
 });
-
-const readMedia = (files) =>
-  new Promise((resolve) => {
-    const sources = [];
-    Array.from(files).forEach((file) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        sources.push({ file, src: reader.result });
-      };
-      reader.readAsDataURL(file);
-    });
-    resolve(sources);
-  });
 
 const NewStory = ({ show = false, onHide }) => {
   const formRef = useRef(null);
   const initialValues = {
     text: '',
     author: '',
-    files: [],
     media: []
   };
-  const onChange = (setFieldValue) => (event) => {
-    const { files } = event.target;
-    readMedia(files).then((sources) => setFieldValue('files', sources));
-  };
-  const [onSubmit] = useSubmit((values) => axios.post('/api/stories', values), {
-    onCompleted() {
-      formRef.current.resetForm();
-      onHide();
+  const [onSubmit] = useSubmit(
+    (values) => {
+      let tasks;
+
+      if (values.media.length) {
+        console.log('we have media to upload');
+        const promises = values.media.map(uploadFile);
+        tasks = Promise.all(promises);
+      }
+
+      return Promise.resolve()
+        .then(tasks)
+        .then(() => axios.post('/api/stories', values));
+    },
+    {
+      onCompleted() {
+        formRef.current.resetForm();
+        onHide();
+      },
+      onError(err) {
+        console.error(err);
+      }
     }
-  });
+  );
 
   return (
-    <Modal show={show} onHide={onHide} centered>
-      <Modal.Header closeButton>
-        <Modal.Title>Share your story</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        <Form
-          ref={formRef}
-          initialValues={initialValues}
-          validationSchema={validationSchema}
-          onSubmit={onSubmit}>
-          {({ values, setFieldValue, isSubmitting }) => (
-            <>
+    <Modal show={show} onHide={onHide} centered scrollable>
+      <Form
+        ref={formRef}
+        initialValues={initialValues}
+        validationSchema={validationSchema}
+        onSubmit={onSubmit}>
+        {({ values, isSubmitting }) => (
+          <>
+            <Modal.Header closeButton />
+            <Modal.Body>
               <Form.Control
                 name="author"
                 label="Your name"
@@ -66,33 +89,31 @@ const NewStory = ({ show = false, onHide }) => {
                 name="text"
                 as="textarea"
                 label="Share your story"
-                placeholder="Share your story in your own words"
+                placeholder="Tell us what happened..."
               />
-              <div className={styles.media}>
-                <input
-                  name="media-files"
-                  type="file"
-                  accept="image/*, video/*"
-                  multiple
-                  value=""
-                  onChange={onChange(setFieldValue)}
-                />
-                <div className={styles.content}>
-                  {values.files.map((file, i) => (
-                    <div key={i} className={styles.imageFrame}>
-                      <img src={file.src} alt={values.author} />
-                    </div>
-                  ))}
-                </div>
-                <div className={styles.message}>
-                  <span>Upload your photos and videos</span>
-                </div>
+              <div className={styles.mediaContent}>
+                {values.media.map((m, i) => (
+                  <div key={i} className={styles.mediaFrame}>
+                    {m.file.type.startsWith('image/') && (
+                      <img src={m.src} alt={values.author} />
+                    )}
+                    {m.file.type.startsWith('video/') && (
+                      // eslint-disable-next-line jsx-a11y/media-has-caption
+                      <video controls playsInline preload="auto">
+                        <source src={m.src} type={m.file.type} />
+                      </video>
+                    )}
+                  </div>
+                ))}
               </div>
+            </Modal.Body>
+            <Modal.Footer className={styles.footer}>
+              <MediaButton />
               <Form.Button pending={isSubmitting}>Share</Form.Button>
-            </>
-          )}
-        </Form>
-      </Modal.Body>
+            </Modal.Footer>
+          </>
+        )}
+      </Form>
     </Modal>
   );
 };

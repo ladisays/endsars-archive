@@ -36,10 +36,18 @@ const AppRoot = ({ Component, pageProps }) => {
                 Close
               </button>
             </div>
-            <NavLink href="/">Home</NavLink>
-            <NavLink href="/cities">Cities</NavLink>
-            <NavLink href="/">Photos</NavLink>
-            <NavLink href="/">Videos</NavLink>
+            <NavLink activeClassName={styles.active} href="/">
+              Home
+            </NavLink>
+            <NavLink activeClassName={styles.active} href="/cities">
+              Cities
+            </NavLink>
+            <NavLink activeClassName={styles.active} href="/">
+              Photos
+            </NavLink>
+            <NavLink activeClassName={styles.active} href="/">
+              Videos
+            </NavLink>
           </Nav>
         </div>
       </aside>
