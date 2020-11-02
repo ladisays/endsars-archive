@@ -1,14 +1,14 @@
 import { generateId } from 'utils/slugs';
 
-const prefix = 'image';
-
-function Image(opts) {
+function Media(opts, prefix = 'media') {
   const now = Date.now();
   this.id = opts.id || generateId(prefix);
-  this.storyId = opts.storyId;
-  this.src = opts.src;
-  this.path = opts.path;
-  this.mimetype = opts.mimetype;
+  this.storyId = opts.storyId || '';
+  this.src = opts.src || '';
+  this.path = opts.path || '';
+  this.type = opts.type || '';
+  this.mimetype = opts.mimetype || '';
+  this.position = opts.position || 0;
   this.createdAt = opts.createdAt || now;
   this.updatedAt = opts.updatedAt || now;
 }
@@ -19,12 +19,14 @@ function toJSON() {
     storyId: this.storyId,
     src: this.src,
     path: this.path,
+    type: this.type,
     mimetype: this.mimetype,
+    position: this.position,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt
   };
 }
 
-Image.prototype.toJSON = toJSON;
+Media.prototype.toJSON = toJSON;
 
-export default Image;
+export default Media;

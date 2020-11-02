@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
+import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
+import Container from 'react-bootstrap/Container';
 // Start FontAwesome icon imports.
 import { fas } from '@fortawesome/free-solid-svg-icons';
 import { far } from '@fortawesome/free-regular-svg-icons';
@@ -17,50 +17,37 @@ config.autoAddCss = false;
 library.add(fas, far);
 
 const AppRoot = ({ Component, pageProps }) => {
-  const { pathname } = useRouter();
-  const [isOpen, setOpen] = useState(false);
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
-
-  useEffect(() => {
-    handleClose();
-  }, [pathname]);
-
   return (
-    <div className={styles.root} data-expanded={isOpen}>
-      <aside>
-        <div className={styles.fixed}>
-          <Nav className="flex-column">
-            <div className={styles.toggle}>
-              <button type="button" onClick={handleClose}>
-                Close
-              </button>
-            </div>
-            <NavLink activeClassName={styles.active} href="/">
-              Home
-            </NavLink>
-            <NavLink activeClassName={styles.active} href="/cities">
-              Cities
-            </NavLink>
-            <NavLink activeClassName={styles.active} href="/">
-              Photos
-            </NavLink>
-            <NavLink activeClassName={styles.active} href="/">
-              Videos
-            </NavLink>
-          </Nav>
-        </div>
-      </aside>
+    <div className={styles.root}>
+      <Navbar expand="lg">
+        <Container>
+          <Navbar.Brand as={NavLink} href="/">
+            <span>#End</span>
+            <span>Police</span>
+            <span>Brutality</span>
+          </Navbar.Brand>
+          <Navbar.Toggle aria-controls="nav" />
+          <Navbar.Collapse id="nav">
+            <Nav className="ml-auto">
+              <NavLink activeClassName={styles.active} href="/">
+                Home
+              </NavLink>
+              <NavLink activeClassName={styles.active} href="/media">
+                Media
+              </NavLink>
+              <NavLink activeClassName={styles.active} href="/sars-sightings">
+                SARS Sightings
+              </NavLink>
+              <NavLink activeClassName={styles.active} href="/contact">
+                Contact
+              </NavLink>
+            </Nav>
+          </Navbar.Collapse>
+        </Container>
+      </Navbar>
       <main>
-        <div className={styles.toggle}>
-          <button type="button" onClick={handleOpen}>
-            Open
-          </button>
-        </div>
         <div className={styles.content}>
-          <div className={styles.flow}>
-            <Component {...pageProps} />
-          </div>
+          <Component {...pageProps} />
         </div>
       </main>
     </div>

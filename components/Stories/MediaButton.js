@@ -3,17 +3,28 @@ import { useField } from 'formik';
 import Icon from 'components/Icon';
 import styles from './media-button.module.sass';
 
+const getType = (file) => {
+  if (!file) return '';
+
+  let type;
+  if (file.type.startsWith('image/')) {
+    type = 'image';
+  } else if (file.type.startsWith('video/')) {
+    type = 'video';
+  }
+  return type;
+};
+
 const readFile = (file) =>
   new Promise((resolve) => {
     const reader = new FileReader();
     reader.onloadend = () => {
-      resolve({ file, src: reader.result });
+      resolve({ file, src: reader.result, type: getType(file), progress: 0 });
     };
     reader.readAsDataURL(file);
   });
 
-const getSources = async (files) =>
-  Promise.all(Array.from(files).map(readFile));
+const getSources = (files) => Promise.all(Array.from(files).map(readFile));
 
 const MediaButton = ({ name = 'media' }) => {
   const [{ value, ...media }, , helpers] = useField(name);
