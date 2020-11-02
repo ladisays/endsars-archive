@@ -29,7 +29,7 @@ const ToggleRef = forwardRef(Toggle);
 
 const StoryTable = ({ stories }) => {
   const [setVerified] = useSubmit((id) =>
-    axios.put(`/api/stories/${id}`, { active: false })
+    axios.put(`/api/stories/${id}`, { active: true })
   );
   return (
     <Table hover>
@@ -61,7 +61,7 @@ const StoryTable = ({ stories }) => {
                 <Dropdown.Toggle as={ToggleRef} id="item-drp" />
                 <Dropdown.Menu>
                   <Dropdown.Item
-                    disabled={story.disabled}
+                    disabled={story.disabled || story.active}
                     onClick={() => setVerified(story.id)}>
                     Verify
                   </Dropdown.Item>
