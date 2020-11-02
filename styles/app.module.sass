@@ -1,9 +1,5 @@
 .root
   width: 100%
-  display: flex
-  aside
-    background-color: white    
-    height: 100vh
   main
     flex: 1
 
@@ -12,48 +8,7 @@
   overflow-y: auto
   flex-grow: 1
 
-@media only screen and (max-width: 991px)
-  .root
-    aside
-      position: fixed
-      top: 0
-      left: -40%
-      z-index: 3
-      transition: left .05s ease-out
-    &[data-expanded="true"]
-      aside
-        left: 0
-        box-shadow: 0 4px 10px 0 rgba(0,0,0,.25)
-        transition: left .05s ease-in
-        :global(.nav)
-          width: 17.5rem
-
-
 @media only screen and (min-width: 992px)
-  .toggle
-    display: none
-  .root
-    aside
-      display: flex
-      justify-content: flex-end
-      width: 30%
-      .fixed
-        position: fixed
-        height: 100%
-      :global(.nav)
-        width: 17.5rem
-        a
-          margin: .25rem 0
-          color: var(--dark)
-          font-weight: bold
-          font-size: 1.25rem
-          transition: color .1s ease-out
-          &:hover
-            background-color: var(--primary)
-            color: white
-            transition: all .1s ease-in
   .content
-    max-width: 70%
-    box-shadow: -1px 0 0 rgba(0,0,0,.1)
     height: 100%
     padding: 0 1rem

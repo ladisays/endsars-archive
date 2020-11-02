@@ -8,4 +8,5 @@ const slugOptions = {
 };
 
 export const cleanSlug = (value = '') => slug(value, slugOptions);
-export const generateId = (prefix) => `${prefix}_${v4()}`;
+export const generateId = (prefix = '') =>
+  prefix ? `${prefix}_${v4()}` : v4();
