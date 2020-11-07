@@ -1,5 +1,4 @@
 import * as firebase from 'firebase-admin';
-import { format } from 'util';
 
 const privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
@@ -20,6 +19,7 @@ try {
   console.error('Firebase admin init error', e.stack);
 }
 
+export const auth = firebase.auth();
 export const firestore = firebase.firestore();
 export const bucket = firebase.storage().bucket();
 export const verifyIdToken = (token) =>
@@ -43,29 +43,9 @@ export const toArray = (snap) => {
   return list;
 };
 
-export const uploadImage = (file) =>
-  // eslint-disable-next-line no-async-promise-executor
-  new Promise(async (resolve, reject) => {
-    try {
-      const bucketFile = bucket.file(file.name);
-      await bucketFile.save(file.buffer, {
-        contentType: file.mimetype,
-        gzip: true
-      });
-      await bucketFile.makePublic();
-      const url = format(
-        `https://storage.googleapis.com/${bucket.name}/${bucketFile.name}`
-      );
-
-      resolve({
-        src: url,
-        mimetype: file.mimetype,
-        id: file.id,
-        path: bucketFile.name
-      });
-    } catch (err) {
-      reject(err);
-    }
-  });
+export const emailSettings = {
+  url: `${process.env.NEXT_PUBLIC_DOMAIN_ADDRESS}/a/users/verify`,
+  handleCodeInApp: true
+};
 
 export default firebase;

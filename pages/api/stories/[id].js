@@ -1,5 +1,6 @@
 import { METHODS, methodNotAllowed } from 'utils/operations';
 import { getStoryById, updateStoryById } from 'lib/stories';
+import checkAuth from 'utils/auth-middleware';
 
 const handler = async (req, res) => {
   switch (req.method) {
@@ -11,10 +12,17 @@ const handler = async (req, res) => {
         return res.status(500).json(e);
       }
     case METHODS.PUT:
+      await checkAuth(req, res);
       try {
-        const { id } = req.query;
-        const story = await updateStoryById(id, req.body);
-        return res.status(201).json(story);
+        const { user } = req;
+
+        if (user.customClaims.admin || user.customClaims.verifier) {
+          const { id } = req.query;
+          const story = await updateStoryById(id, req.body);
+          return res.status(201).json(story);
+        }
+
+        return res.status(401).json({ message: 'Unauthorized' });
       } catch (e) {
         return res.status(500).json(e);
       }

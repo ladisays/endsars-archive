@@ -1,15 +1,64 @@
 .media
   display: flex
+  flex-wrap: wrap
+  justify-content: space-between
+  flex: 1 1 auto
+  :global
+    .slick-list
+      height: 100%
+      .slick-track
+        height: 100%
+      .slick-slide
+        > div
+          display: flex
+          flex-direction: column
+          height: 100%
+  &.multi
+    :global
+      .slick-list
+        height: calc(100% - 2.5rem)
+.detail
+  .item
+    height: 20rem
+  .arrow
+    background-color: rgba(0,0,0,0.5)
+          
+.arrow
+  order: 2
+  border-radius: 50%
+  margin-top: 0.5rem
+  width: 2rem
+  height: 2rem
+  background-color: rgba(0,0,0,0.25)
+  border: 1px solid rgba(255,255,255,0.25)
+  color: var(--white)
+  &:hover
+    background-color: var(--light)
+    color: var(--dark)
+    border-color: var(--dark)
+  &:disabled
+    pointer-events: none
+    opacity: 40%
 .item
   height: 12rem
   width: 100%
   flex: 1 1 auto
-  
+  border-radius: 0.5rem
+  border: 1px solid rgba(0,0,0,0.05)
+  background-color: rgba(0,0,0,0.05)
+
   &:not(:last-child)
     margin-right: 1rem
   img,
   video
-    width: 100%
     height: 100%
+    width: 100%
+    border-radius: 0.5rem
+  img
     object-fit: cover
-    border-radius: 0.25rem
+  video
+    object-fit: contain
+@media only screen and (min-width: 992px)
+  .detail
+    .item
+      height: 25rem

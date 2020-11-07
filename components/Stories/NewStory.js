@@ -1,18 +1,20 @@
 /* eslint-disable react/no-array-index-key */
-import { useRef, useState } from 'react';
+import { useRef, useState, useMemo } from 'react';
 import Modal from 'react-bootstrap/Modal';
 import ProgressBar from 'react-bootstrap/ProgressBar';
 import axios from 'axios';
+import { FieldArray } from 'formik';
 import { object, string } from 'yup';
 
-import { initFirebase, storageRef } from 'utils/firebase';
+import { storageRef } from 'utils/firebase';
 import { generateId } from 'utils/slugs';
 import Form from 'components/Form';
+import Icon from 'components/Icon';
 import useSubmit from 'hooks/useSubmit';
+import useAlerts from 'hooks/useAlerts';
+import Nigeria from 'lib/nigeria.json';
 import MediaButton from './MediaButton';
 import styles from './new-story.module.sass';
-
-initFirebase();
 
 const createFile = (file) => {
   const re = /(?:\.([^.]+))?$/;
@@ -71,24 +73,29 @@ const validationSchema = object().shape({
   title: string().required('Title is required'),
   text: string(),
   author: string(),
-  location: string()
+  location: string().required('Location is required')
 });
 
-const NewStory = ({ show = false, onHide }) => {
+const NewStory = ({ admin = false, show = false, onHide, onSuccess }) => {
   const [state, setState] = useState({});
+  const { showAlert } = useAlerts();
   const formRef = useRef(null);
-  const initialValues = {
-    text: '',
-    author: '',
-    title: '',
-    media: []
-  };
+  const initialValues = useMemo(
+    () => ({
+      text: '',
+      author: '',
+      title: '',
+      location: '',
+      media: [],
+      active: !!admin
+    }),
+    [admin]
+  );
   const [onSubmit] = useSubmit(
     async (values) => {
       let media = [];
 
       if (values.media.length) {
-        console.log('we have media to upload');
         const promises = values.media.map(uploadFile(setState));
         media = await Promise.all(promises);
       }
@@ -100,11 +107,22 @@ const NewStory = ({ show = false, onHide }) => {
     },
     {
       onCompleted() {
+        if (admin && typeof onSuccess === 'function') {
+          onSuccess();
+        }
+        showAlert({
+          title: 'Success',
+          text: 'Your story was successfully created.'
+        });
         formRef.current.resetForm();
         onHide();
       },
       onError(err) {
         console.error(err);
+        showAlert({
+          variant: 'danger',
+          text: 'A problem occurred while creating your story'
+        });
       }
     }
   );
@@ -113,6 +131,7 @@ const NewStory = ({ show = false, onHide }) => {
     <Modal show={show} onHide={onHide} centered scrollable>
       <Form
         ref={formRef}
+        className={styles.root}
         initialValues={initialValues}
         validationSchema={validationSchema}
         onSubmit={onSubmit}>
@@ -126,37 +145,68 @@ const NewStory = ({ show = false, onHide }) => {
                 placeholder="A short description"
               />
               <Form.Control
-                name="author"
-                label="Your name"
-                placeholder="John Doe"
-              />
-              <Form.Control
                 name="text"
                 as="textarea"
                 label="Share your story"
                 placeholder="Tell us what happened..."
               />
-              <div className={styles.mediaContent}>
-                {values.media.map((m, i) => (
-                  <div key={i} className={styles.mediaFrame}>
-                    {m.type === 'image' && (
-                      <img src={m.src} alt={values.author} />
-                    )}
-                    {m.type === 'video' && (
-                      // eslint-disable-next-line jsx-a11y/media-has-caption
-                      <video controls playsInline preload="auto">
-                        <source src={m.src} type={m.file.type} />
-                      </video>
-                    )}
-                    <ProgressBar
-                      animated={state[i] !== 100}
-                      striped={state[i] !== 100}
-                      now={state[i] || 0}
-                      className={styles.progress}
+              <Form.Control
+                name="location"
+                as="select"
+                helpText="Where it happened"
+                label="Location">
+                {Object.values(Nigeria.states)
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map((item) => (
+                    <Form.Control.Option
+                      key={item.code}
+                      value={item.code}
+                      name={item.name}
                     />
+                  ))}
+              </Form.Control>
+              <Form.Control
+                name="author"
+                label="Your name"
+                placeholder="John Doe"
+              />
+              <FieldArray name="media">
+                {({ remove }) => (
+                  <div className={styles.mediaContent}>
+                    {values.media.map((m, i) => (
+                      <div key={i} className={styles.mediaFrame}>
+                        {m.type === 'image' && (
+                          <img src={m.src} alt={values.author} />
+                        )}
+                        {m.type === 'video' && (
+                          // eslint-disable-next-line jsx-a11y/media-has-caption
+                          <video controls playsInline preload="auto">
+                            <source src={m.src} type={m.file.type} />
+                          </video>
+                        )}
+                        {state[i] !== undefined ? (
+                          <div className={styles.progressHolder}>
+                            <ProgressBar
+                              variant="success"
+                              animated={state[i] !== 100}
+                              striped={state[i] !== 100}
+                              now={state[i] || 0}
+                              className={styles.progress}
+                            />
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            className={styles.mediaClose}
+                            onClick={() => remove(i)}>
+                            <Icon name="times" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                )}
+              </FieldArray>
             </Modal.Body>
             <Modal.Footer className={styles.footer}>
               <MediaButton />

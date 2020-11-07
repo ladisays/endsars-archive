@@ -45,27 +45,30 @@ export const useBaseAsync = (
   const options = { ...$initialState, ...initialState };
   const [state, dispatch] = useReducer(reducer, options);
   const initiator = useMemo(() => fn, [fn]);
-  const execute = useCallback(async () => {
-    dispatch([ACTIONS.PENDING]);
+  const execute = useCallback(
+    async (...args) => {
+      dispatch([ACTIONS.PENDING]);
 
-    try {
-      const result = await Promise.resolve(initiator());
+      try {
+        const result = await Promise.resolve(initiator(...args));
 
-      if (mounted.current) {
-        if (typeof state.onCompleted === 'function') {
-          state.onCompleted(result.data);
+        if (mounted.current) {
+          if (typeof state.onCompleted === 'function') {
+            state.onCompleted(result.data);
+          }
+          dispatch([ACTIONS.FULFILLED, result.data]);
         }
-        dispatch([ACTIONS.FULFILLED, result.data]);
-      }
-    } catch (e) {
-      if (mounted.current) {
-        if (typeof state.onError === 'function') {
-          state.onError(e);
+      } catch (e) {
+        if (mounted.current) {
+          if (typeof state.onError === 'function') {
+            state.onError(e);
+          }
+          dispatch([ACTIONS.FAILED, e]);
         }
-        dispatch([ACTIONS.FAILED, e]);
       }
-    }
-  }, [initiator, state]);
+    },
+    [initiator, state]
+  );
 
   useEffect(() => {
     mounted.current = true;

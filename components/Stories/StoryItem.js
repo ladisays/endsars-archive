@@ -1,9 +1,10 @@
+import { useRouter } from 'next/router';
 import Card from 'react-bootstrap/Card';
 import Col from 'react-bootstrap/Col';
 import moment from 'moment';
 
 import { Link } from 'components/Link';
-import { MediaItem } from './Media';
+import Media from './Media';
 import styles from './story-item.module.sass';
 
 export const formatTime = (story = {}) => {
@@ -19,6 +20,12 @@ export const StoryLink = ({ id, children, className }) => (
 );
 
 const Story = ({ id, text, title, media, ...story }) => {
+  const { query } = useRouter();
+  const showAll = query.f === undefined;
+  const imageFilter = showAll || query.f === 'image';
+  const videoFilter = showAll || query.f === 'video';
+  const textFilter = showAll || query.f === 'text';
+
   return (
     <Col className={styles.root}>
       <Card className={styles.card}>
@@ -28,11 +35,15 @@ const Story = ({ id, text, title, media, ...story }) => {
           </StoryLink>
         </Card.Header>
         <Card.Body className={styles.body}>
-          {!!media.length && (
-            <MediaItem className={styles.media} {...media[0]} />
+          {!!media.length && (imageFilter || videoFilter) && (
+            <Media
+              sources={media}
+              imageFilter={imageFilter}
+              videoFilter={videoFilter}
+            />
           )}
-          {text && (
-            <div className={styles.text}>
+          {text && textFilter && (
+            <div data-media={showAll && !!media.length} className={styles.text}>
               <StoryLink id={id} className={styles.link}>
                 {text}
               </StoryLink>
@@ -41,7 +52,7 @@ const Story = ({ id, text, title, media, ...story }) => {
         </Card.Body>
         <Card.Footer className={styles.footer}>
           <div>{formatTime(story)}</div>
-          <div>Location</div>
+          <div>{story.location || 'Unavailable'}</div>
         </Card.Footer>
       </Card>
     </Col>

@@ -36,9 +36,11 @@
     object-fit: cover
     border-radius: 0.25rem
 .text
-  margin-top: 1rem
+  &[data-media="true"]
+    margin-top: 1rem
 .footer
   display: flex
   justify-content: space-between
   font-size: 0.75rem
-  color: rgba(255,255,255,0.55)
+  color: rgba(255,255,255,0.5)
+  border-top: 1px solid rgba(255,255,255,0.125)

@@ -1,3 +1,6 @@
+/* eslint-disable jsx-a11y/anchor-is-valid */
+/* eslint-disable jsx-a11y/click-events-have-key-events */
+/* eslint-disable jsx-a11y/no-static-element-interactions */
 import RBNavLink from 'react-bootstrap/NavLink';
 import { useRouter } from 'next/router';
 import NLink from 'next/link';
@@ -12,10 +15,12 @@ export const getPaths = (asPath) => {
   return [href, pathname, query];
 };
 
-export const Link = ({ children, className, ...props }) => {
+export const Link = ({ children, className, onClick, ...props }) => {
   return (
     <NLink {...props}>
-      <a className={className}>{children}</a>
+      <a className={className} onClick={onClick}>
+        {children}
+      </a>
     </NLink>
   );
 };
@@ -32,7 +37,9 @@ export const NavLink = ({ children, className, activeClassName, ...props }) => {
 
   return (
     <NLink {...props} passHref>
-      <RBNavLink className={classes}>{children}</RBNavLink>
+      <RBNavLink className={classes} onClick={props.onClick}>
+        {children}
+      </RBNavLink>
     </NLink>
   );
 };

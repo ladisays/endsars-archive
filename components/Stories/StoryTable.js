@@ -1,9 +1,9 @@
-import { forwardRef } from 'react';
 import Table from 'react-bootstrap/Table';
 import Dropdown from 'react-bootstrap/Dropdown';
 import moment from 'moment';
 import axios from 'axios';
 
+import Toggle from 'components/Custom/Toggle';
 import Icon from 'components/Icon';
 import useSubmit from 'hooks/useSubmit';
 import styles from './story-table.module.sass';
@@ -14,58 +14,66 @@ export const formatTime = (story = {}) => {
   return moment(timestamp).format('DD MMM');
 };
 
-const Toggle = ({ onClick, className, ...props }, ref) => (
-  <button
-    className={styles.toggle}
-    type="button"
-    ref={ref}
-    onClick={onClick}
-    {...props}>
-    <Icon name="ellipsis-h" />
-  </button>
-);
+export const getStatus = (story = {}) => {
+  if (story.disabled) {
+    return 'ban';
+  }
 
-const ToggleRef = forwardRef(Toggle);
+  return story.active ? 'check-circle' : 'clock';
+};
 
 const StoryTable = ({ stories }) => {
   const [setVerified] = useSubmit((id) =>
     axios.put(`/api/stories/${id}`, { active: true })
   );
+  const [setDisabled] = useSubmit((id) =>
+    axios.put(`/api/stories/${id}`, { disabled: true, active: false })
+  );
   return (
-    <Table hover>
+    <Table responsive="lg" hover className={styles.root}>
       <thead>
         <tr>
           <th />
-          <th>Description</th>
-          <th>Media count</th>
+          <th>Story</th>
           <th>Date</th>
-          <th>Status</th>
+          <th className="text-center">Media</th>
           <th />
         </tr>
       </thead>
       <tbody>
-        {stories.map((story, i) => (
+        {stories.map((story) => (
           <tr key={story.id}>
-            <td>{i + 1}</td>
+            <td className="text-center">
+              <Icon
+                data-active={story.active}
+                data-disabled={story.disabled}
+                name={getStatus(story)}
+              />
+            </td>
             <td>
               <div>
-                <strong>{story.title || 'Unavailable'}</strong>
+                <div>{story.title || 'Unavailable'}</div>
                 {story.text && <div className="text-muted">{story.text}</div>}
               </div>
             </td>
-            <td>{story.media?.length || 0}</td>
             <td>{formatTime(story)}</td>
-            <td>{story.active ? 'Verified' : 'Unverified'}</td>
-            <td>
+            <td className="text-center">{story.media?.length || 0}</td>
+            <td className="text-center">
               <Dropdown alignRight>
-                <Dropdown.Toggle as={ToggleRef} id="item-drp" />
+                <Dropdown.Toggle as={Toggle} id={story.id} />
                 <Dropdown.Menu>
                   <Dropdown.Item
+                    eventKey="verify"
                     disabled={story.disabled || story.active}
                     onClick={() => setVerified(story.id)}>
                     Verify
                   </Dropdown.Item>
-                  <Dropdown.Item disabled>Disable</Dropdown.Item>
+                  <Dropdown.Item
+                    eventKey="disable"
+                    disabled={story.disabled}
+                    onClick={() => setDisabled(story.id)}>
+                    Disable
+                  </Dropdown.Item>
                 </Dropdown.Menu>
               </Dropdown>
             </td>

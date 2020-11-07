@@ -1,0 +1,33 @@
+.root
+  width: 100%
+  main
+    flex: 1
+
+  .flow
+    position: relative
+    overflow-y: auto
+    flex-grow: 1
+
+  .brand
+    text-transform: uppercase
+    display: flex
+    flex-direction: column
+    padding-left: 0
+    padding-right: 0
+    span
+      font-weight: bold
+      line-height: 1
+      color: var(--danger)
+      &:first-child
+        font-size: 1.75rem
+        letter-spacing: 0.125rem
+        color: var(--primary)
+      &:nth-child(2)
+        font-size: 1.375rem
+      &:last-child
+        font-size: 0.875rem
+
+@media only screen and (min-width: 992px)
+  .content
+    height: 100%
+    padding: 0 1rem
