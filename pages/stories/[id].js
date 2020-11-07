@@ -39,7 +39,7 @@ const Story = ({ story, error }) => {
 
   return (
     <Container>
-      <Meta title={story.title} description={story.description} />
+      <Meta title={story.title} description={story.text} />
       <Row>
         <Col lg={{ span: 6, offset: 3 }}>
           <StoryDetail {...story} />
