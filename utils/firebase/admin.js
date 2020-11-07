@@ -43,9 +43,9 @@ export const toArray = (snap) => {
   return list;
 };
 
-export const emailSettings = {
+export const getEmailSettings = () => ({
   url: `${process.env.NEXT_PUBLIC_DOMAIN_ADDRESS}/a/users/verify`,
   handleCodeInApp: true
-};
+});
 
 export default firebase;

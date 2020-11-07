@@ -1,4 +1,4 @@
-import { auth, emailSettings } from 'utils/firebase/admin';
+import { auth, getEmailSettings } from 'utils/firebase/admin';
 import { METHODS, methodNotAllowed } from 'utils/operations';
 import sendMail, { buildEmailLink } from 'utils/mailer';
 import checkAuth from 'utils/auth-middleware';
@@ -20,7 +20,7 @@ const handlers = async (req, res) => {
             });
             const link = await auth.generateSignInWithEmailLink(
               email,
-              emailSettings
+              getEmailSettings()
             );
             await sendMail(buildEmailLink(email, link));
             return res.status(201).json({ message: 'Success' });

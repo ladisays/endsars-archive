@@ -1,4 +1,4 @@
-import { auth, emailSettings } from 'utils/firebase/admin';
+import { auth, getEmailSettings } from 'utils/firebase/admin';
 import { METHODS, methodNotAllowed } from 'utils/operations';
 import sendMail, { buildEmailLink } from 'utils/mailer';
 import checkAuth from 'utils/auth-middleware';
@@ -39,9 +39,11 @@ const handlers = async (req, res) => {
           await auth.setCustomUserClaims(userId, roles);
         }
 
+        console.log(getEmailSettings());
+
         const link = await auth.generateSignInWithEmailLink(
           email,
-          emailSettings
+          getEmailSettings()
         );
 
         await sendMail(buildEmailLink(email, link));
