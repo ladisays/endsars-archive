@@ -13,8 +13,8 @@ export const buildEmailLink = (email, link) => ({
 
 const sendMail = async ({ to, subject, text, html }) => {
   const auth = {
-    user: process.env.MAIL_SENDER || 'ladisays@gmail.com',
-    pass: process.env.MAIL_SENDER_PASS || 'atlucopbjtsgkvok'
+    user: process.env.MAIL_SENDER,
+    pass: process.env.MAIL_SENDER_PASS
   };
   const transporter = nodemailer.createTransport({
     service: 'gmail',
