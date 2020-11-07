@@ -1,15 +1,14 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import axios from 'axios';
-import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
-import Spinner from 'react-bootstrap/Spinner';
 
 import { useLazyAsync } from 'hooks/useBaseAsync';
 import { isPending, isFailed, isFulfilled, isIdle } from 'utils/operations';
 import StoryDetail from 'components/Stories/StoryDetail';
 import { getLayout } from 'components/Layouts/Admin';
+import Loading from 'components/Loading';
 
 const Story = () => {
   const { query } = useRouter();
@@ -25,15 +24,13 @@ const Story = () => {
   }, [loading, query.id, refetch]);
 
   return (
-    <Container>
-      <Row>
-        <Col lg={{ span: 6, offset: 3 }}>
-          {isPending(loading) && <Spinner animation="border" />}
-          {isFailed(loading) && <div>An error occurred!</div>}
-          {isFulfilled(loading) && <StoryDetail admin {...data} />}
-        </Col>
-      </Row>
-    </Container>
+    <Row>
+      <Col lg={{ span: 8, offset: 2 }}>
+        {isPending(loading) && <Loading />}
+        {isFailed(loading) && <div>An error occurred!</div>}
+        {isFulfilled(loading) && <StoryDetail admin {...data} />}
+      </Col>
+    </Row>
   );
 };
 

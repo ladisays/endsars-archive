@@ -1,16 +1,8 @@
 import React from 'react';
 
-import Icon from 'components/Icon';
-
-export const Toggle = ({ onClick, className, children, ...props }, ref) => (
-  <button
-    data-custom-toggle
-    type="button"
-    ref={ref}
-    onClick={onClick}
-    {...props}>
+export const Toggle = ({ onClick, children }, ref) => (
+  <button data-custom-toggle type="button" ref={ref} onClick={onClick}>
     {children}
-    <Icon name="ellipsis-h" />
   </button>
 );
 

@@ -33,13 +33,12 @@ const handlers = async (req, res) => {
                 emailVerified: false
               });
               userId = user.uid;
+            } else {
+              return res.status(401).json({ message: 'Unauthorized' });
             }
-            return res.status(401).json({ message: 'Unauthorized' });
           }
           await auth.setCustomUserClaims(userId, roles);
         }
-
-        console.log(getEmailSettings());
 
         const link = await auth.generateSignInWithEmailLink(
           email,

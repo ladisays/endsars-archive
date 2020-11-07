@@ -6,9 +6,10 @@ const handler = async (req, res) => {
   switch (req.method) {
     case METHODS.GET:
       try {
-        const story = await getStoryById(req.query);
+        const story = await getStoryById(req.query.id);
         return res.status(200).json(story);
       } catch (e) {
+        console.log(e);
         return res.status(500).json(e);
       }
     case METHODS.PUT:
@@ -24,6 +25,7 @@ const handler = async (req, res) => {
 
         return res.status(401).json({ message: 'Unauthorized' });
       } catch (e) {
+        console.log(e);
         return res.status(500).json(e);
       }
     default:

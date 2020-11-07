@@ -4,6 +4,7 @@ import Col from 'react-bootstrap/Col';
 import moment from 'moment';
 
 import { Link } from 'components/Link';
+import Nigeria from 'lib/nigeria.json';
 import Media from './Media';
 import styles from './story-item.module.sass';
 
@@ -12,6 +13,9 @@ export const formatTime = (story = {}) => {
 
   return moment(timestamp).fromNow();
 };
+
+export const getLocation = (code) =>
+  Nigeria.states[code]?.name || 'Unavailable';
 
 export const StoryLink = ({ id, children, className }) => (
   <Link href="/stories/[id]" as={`/stories/${id}`} className={className}>
@@ -52,7 +56,7 @@ const Story = ({ id, text, title, media, ...story }) => {
         </Card.Body>
         <Card.Footer className={styles.footer}>
           <div>{formatTime(story)}</div>
-          <div>{story.location || 'Unavailable'}</div>
+          <div>{getLocation(story.location)}</div>
         </Card.Footer>
       </Card>
     </Col>

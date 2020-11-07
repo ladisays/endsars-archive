@@ -1,3 +1,4 @@
+import { useRouter } from 'next/router';
 import Table from 'react-bootstrap/Table';
 import Dropdown from 'react-bootstrap/Dropdown';
 import moment from 'moment';
@@ -23,6 +24,7 @@ export const getStatus = (story = {}) => {
 };
 
 const StoryTable = ({ stories }) => {
+  const router = useRouter();
   const [setVerified] = useSubmit((id) =>
     axios.put(`/api/stories/${id}`, { active: true })
   );
@@ -60,13 +62,22 @@ const StoryTable = ({ stories }) => {
             <td className="text-center">{story.media?.length || 0}</td>
             <td className="text-center">
               <Dropdown alignRight>
-                <Dropdown.Toggle as={Toggle} id={story.id} />
+                <Dropdown.Toggle as={Toggle} id={story.id}>
+                  <Icon name="ellipsis-h" />
+                </Dropdown.Toggle>
                 <Dropdown.Menu>
+                  <Dropdown.Item
+                    eventKey="view"
+                    onClick={() => {
+                      router.push('/a/stories/[id]', `/a/stories/${story.id}`);
+                    }}>
+                    View
+                  </Dropdown.Item>
                   <Dropdown.Item
                     eventKey="verify"
                     disabled={story.disabled || story.active}
                     onClick={() => setVerified(story.id)}>
-                    Verify
+                    {story.active ? 'Verified' : 'Verify'}
                   </Dropdown.Item>
                   <Dropdown.Item
                     eventKey="disable"
