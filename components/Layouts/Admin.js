@@ -1,25 +1,30 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Nav from 'react-bootstrap/Nav';
 
 import useAuth from 'hooks/useAuth';
-import useMounted from 'hooks/useMounted';
 import Login from 'components/Login';
 import { NavLink } from 'components/Link';
 import styles from './admin.module.sass';
 
 const AdminLayout = ({ children }) => {
-  const mounted = useMounted();
+  const [mounted, setMounted] = useState(false);
   const { roles, isAnonymous } = useAuth();
 
   useEffect(() => {
-    if (!mounted) return;
+    setMounted(true);
+    return () => {
+      setMounted(false);
+    };
+  }, []);
+
+  useEffect(() => {
     if (!roles.admin || !roles.verifier) {
       // prompt auth modal or redirect
     }
-  }, [mounted, roles]);
+  }, [roles]);
 
   if (mounted && (roles.admin || roles.verifier)) {
     return (
