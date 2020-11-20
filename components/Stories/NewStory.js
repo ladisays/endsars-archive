@@ -1,18 +1,22 @@
 /* eslint-disable react/no-array-index-key */
 import { useRef, useState, useMemo } from 'react';
-import Modal from 'react-bootstrap/Modal';
 import ProgressBar from 'react-bootstrap/ProgressBar';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
 import axios from 'axios';
 import { FieldArray } from 'formik';
-import { object, string } from 'yup';
+import { bool, object, string } from 'yup';
+import moment from 'moment';
 
 import { storageRef } from 'utils/firebase';
-import { generateId } from 'utils/slugs';
+import { cleanSlug, generateId } from 'utils/slugs';
+import { isFulfilled } from 'utils/operations';
 import Form from 'components/Form';
 import Icon from 'components/Icon';
 import useSubmit from 'hooks/useSubmit';
 import useAlerts from 'hooks/useAlerts';
-import Nigeria from 'lib/nigeria.json';
+import useAuth from 'hooks/useAuth';
+import { useAsync } from 'hooks/useBaseAsync';
 import MediaButton from './MediaButton';
 import styles from './new-story.module.sass';
 
@@ -69,30 +73,52 @@ export const uploadFile = (setState) => (source, idx) =>
     );
   });
 
-const validationSchema = object().shape({
-  title: string().required('Title is required'),
-  text: string(),
-  author: string(),
-  location: string().required('Location is required')
-});
+const validationSchema = (isAdmin = false) =>
+  object().shape({
+    title: string().required('Title is required'),
+    slug: isAdmin ? string().required('Slug is required') : undefined,
+    description: string(),
+    author: string(),
+    city: isAdmin ? string().required('City is required') : undefined,
+    location: string().required('Location is required'),
+    verified: isAdmin ? bool() : undefined,
+    eventDate: string().required('The date of this event is required')
+  });
 
-const NewStory = ({ admin = false, show = false, onHide, onSuccess }) => {
-  const [state, setState] = useState({});
-  const { showAlert } = useAlerts();
+const valid = (value) =>
+  (moment.isMoment(value) && value.isSameOrBefore(new Date())) ||
+  moment(value).isSameOrBefore(new Date());
+
+const dateFormat = 'DD/MM/YYYY';
+
+const NewStory = ({ story }) => {
   const formRef = useRef(null);
+  const [state, setState] = useState({});
+  const { roles } = useAuth();
+  const { showAlert } = useAlerts();
   const initialValues = useMemo(
     () => ({
-      text: '',
-      author: '',
-      title: '',
-      location: '',
+      title: (story && story.title) || '',
+      slug: (story && story.slug) || '',
+      description: (story && story.description) || '',
+      author: (story && story.author) || '',
+      city: (story && story.city) || '',
+      location: (story && story.location) || '',
       media: [],
-      active: !!admin
+      eventDate: (story && story.eventDate) || '',
+      formattedDate: (story && moment(story.eventDate).format(dateFormat)) || ''
     }),
-    [admin]
+    [story]
   );
+  const [{ loading, data: cities }] = useAsync(() => axios.get('/api/cities'), {
+    data: []
+  });
   const [onSubmit] = useSubmit(
     async (values) => {
+      if (story) {
+        return axios.put(`/api/stories/${story.id}`, values);
+      }
+
       let media = [];
 
       if (values.media.length) {
@@ -107,115 +133,152 @@ const NewStory = ({ admin = false, show = false, onHide, onSuccess }) => {
     },
     {
       onCompleted() {
-        if (admin && typeof onSuccess === 'function') {
-          onSuccess();
-        }
         showAlert({
           title: 'Success',
-          text: 'Your story was successfully created.'
+          text: story
+            ? 'Story has been updated'
+            : 'Your story was successfully created.'
         });
         formRef.current.resetForm();
-        onHide();
       },
       onError(err) {
         console.error(err);
         showAlert({
           variant: 'danger',
-          text: 'A problem occurred while creating your story'
+          text: story
+            ? 'A problem occurred during update'
+            : 'A problem occurred while creating your story'
         });
       }
     }
   );
 
   return (
-    <Modal show={show} onHide={onHide} centered scrollable>
-      <Form
-        ref={formRef}
-        className={styles.root}
-        initialValues={initialValues}
-        validationSchema={validationSchema}
-        onSubmit={onSubmit}>
-        {({ values, isSubmitting }) => (
-          <>
-            <Modal.Header closeButton />
-            <Modal.Body>
+    <Form
+      ref={formRef}
+      className={styles.root}
+      initialValues={initialValues}
+      enableReinitialize
+      validationSchema={validationSchema(roles.admin || roles.verifier)}
+      onSubmit={onSubmit}>
+      {({ values, isSubmitting, setFieldValue }) => (
+        <Row>
+          <Col xs={12} lg={6}>
+            <Form.Control
+              name="title"
+              label="Title"
+              placeholder="A short description"
+              onChange={(e) => {
+                setFieldValue('title', e.target.value);
+                setFieldValue('slug', cleanSlug(e.target.value));
+              }}
+            />
+            {(roles.admin || roles.verifier) && (
               <Form.Control
-                name="title"
-                label="Title"
-                placeholder="A short description"
+                name="slug"
+                label="Slug"
+                placeholder="e.g. a-short-identifier"
+                helpText="The url-friendly value for this story's title"
               />
-              <Form.Control
-                name="text"
-                as="textarea"
-                label="Share your story"
-                placeholder="Tell us what happened..."
-              />
-              <Form.Control
-                name="location"
-                as="select"
-                helpText="Where it happened"
-                label="Location">
-                {Object.values(Nigeria.states)
-                  .sort((a, b) => a.name.localeCompare(b.name))
-                  .map((item) => (
+            )}
+            <Form.Control
+              name="description"
+              as="textarea"
+              label="Share your story"
+              placeholder="Tell us what happened..."
+            />
+            <Form.Date
+              name="formattedDate"
+              label="Date"
+              format={dateFormat}
+              placeholder={dateFormat}
+              onChange={(v) => {
+                const newValue = v;
+                setFieldValue('formattedDate', v);
+                if (newValue.constructor.name === 'Moment') {
+                  setFieldValue('formattedDate', newValue.format(dateFormat));
+                  if (newValue.isValid()) {
+                    setFieldValue('eventDate', new Date(newValue).getTime());
+                  }
+                }
+              }}
+              isValidDate={valid}
+              helpText="The date when this happened"
+            />
+            <Form.Control
+              name="location"
+              label="Location"
+              helpText="The place where this happened?"
+            />
+            {(roles.admin || roles.verifier) && (
+              <Form.Control as="select" name="city" label="City">
+                {isFulfilled(loading) &&
+                  cities.map((city) => (
                     <Form.Control.Option
-                      key={item.code}
-                      value={item.code}
-                      name={item.name}
+                      key={city.id}
+                      id={city.id}
+                      label={city.name}
                     />
                   ))}
               </Form.Control>
-              <Form.Control
-                name="author"
-                label="Your name"
-                placeholder="John Doe"
-              />
-              <FieldArray name="media">
-                {({ remove }) => (
-                  <div className={styles.mediaContent}>
-                    {values.media.map((m, i) => (
-                      <div key={i} className={styles.mediaFrame}>
-                        {m.type === 'image' && (
-                          <img src={m.src} alt={values.author} />
-                        )}
-                        {m.type === 'video' && (
-                          // eslint-disable-next-line jsx-a11y/media-has-caption
-                          <video controls playsInline preload="auto">
-                            <source src={m.src} type={m.file.type} />
-                          </video>
-                        )}
-                        {state[i] !== undefined ? (
-                          <div className={styles.progressHolder}>
-                            <ProgressBar
-                              variant="success"
-                              animated={state[i] !== 100}
-                              striped={state[i] !== 100}
-                              now={state[i] || 0}
-                              className={styles.progress}
-                            />
-                          </div>
-                        ) : (
-                          <button
-                            type="button"
-                            className={styles.mediaClose}
-                            onClick={() => remove(i)}>
-                            <Icon name="times" />
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </FieldArray>
-            </Modal.Body>
-            <Modal.Footer className={styles.footer}>
-              <MediaButton />
-              <Form.Button pending={isSubmitting}>Share</Form.Button>
-            </Modal.Footer>
-          </>
-        )}
-      </Form>
-    </Modal>
+            )}
+          </Col>
+          <Col xs={12} lg={6}>
+            <Form.Control
+              name="author"
+              label="Author"
+              placeholder="The name of the author"
+              helpText="The author of the media files, if available"
+            />
+            <MediaButton />
+            <FieldArray name="media">
+              {({ remove }) => (
+                <div className={styles.mediaContent}>
+                  {values.media.map((m, i) => (
+                    <div key={i} className={styles.mediaFrame}>
+                      {m.type === 'image' && (
+                        <img src={m.src} alt={values.author} />
+                      )}
+                      {m.type === 'video' && (
+                        // eslint-disable-next-line jsx-a11y/media-has-caption
+                        <video controls playsInline preload="auto">
+                          <source src={m.src} type={m.file.type} />
+                        </video>
+                      )}
+                      {state[i] !== undefined ? (
+                        <div className={styles.progressHolder}>
+                          <ProgressBar
+                            variant="success"
+                            animated={state[i] !== 100}
+                            striped={state[i] !== 100}
+                            now={state[i] || 0}
+                            className={styles.progress}
+                          />
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          className={styles.mediaClose}
+                          onClick={() => remove(i)}>
+                          <Icon name="times" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </FieldArray>
+          </Col>
+          <Col xs={12} className={styles.footer}>
+            <Form.Group>
+              <Form.Button pending={isSubmitting}>
+                {story ? 'Update' : 'Share'}
+              </Form.Button>
+            </Form.Group>
+          </Col>
+        </Row>
+      )}
+    </Form>
   );
 };
 

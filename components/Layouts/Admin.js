@@ -32,11 +32,17 @@ const AdminLayout = ({ children }) => {
         <Row>
           <Col xs={12} lg={3}>
             <Nav>
-              <NavLink href="/a" activeClassName={styles.active}>
+              <NavLink exact href="/a" activeClassName={styles.active}>
                 Dashboard
               </NavLink>
               <NavLink href="/a/stories" activeClassName={styles.active}>
                 Stories
+              </NavLink>
+              <NavLink href="/a/cities" activeClassName={styles.active}>
+                Cities
+              </NavLink>
+              <NavLink href="/a/countries" activeClassName={styles.active}>
+                Countries
               </NavLink>
               {roles.admin && (
                 <NavLink href="/a/users" activeClassName={styles.active}>

@@ -1,22 +1,34 @@
-import { useState } from 'react';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Button from 'react-bootstrap/Button';
 
-import { getStories } from 'lib/stories';
-import { NewStory, StoryList } from 'components/Stories';
+import connectDb from 'utils/db/connect';
+import Story from 'utils/db/models/Story';
+import { StoryList } from 'components/Stories';
 import { StoriesProvider } from 'hooks/useStories';
 import Meta from 'components/Layouts/Meta';
+import { Link } from 'components/Link';
 
-export const getStaticProps = async ({ params }) => {
+export const getStaticProps = async () => {
   let stories = [];
   let error = null;
 
   try {
-    stories = await getStories(params);
+    await connectDb();
+    stories = await Story.find({ verified: true }).populate({
+      path: 'city',
+      select: 'name slug',
+      populate: {
+        path: 'country',
+        select: 'name slug'
+      }
+    });
+    stories = stories.map((_story) => {
+      const story = _story.toJSON();
+      return story;
+    });
   } catch (err) {
-    console.log(err);
     error = err;
   }
 
@@ -27,10 +39,6 @@ export const getStaticProps = async ({ params }) => {
 };
 
 const Home = ({ stories, error }) => {
-  const [show, setShow] = useState(false);
-  const handleClose = () => setShow(false);
-  const handleOpen = () => setShow(true);
-
   return (
     <StoriesProvider stories={stories}>
       <Meta />
@@ -46,12 +54,13 @@ const Home = ({ stories, error }) => {
               protests.
             </small>
             <p>
-              <Button onClick={handleOpen}>Share your story</Button>
+              <Button as={Link} href="/new">
+                Share your story
+              </Button>
             </p>
           </Col>
         </Row>
         <StoryList error={error} />
-        {show && <NewStory show={show} onHide={handleClose} />}
       </Container>
     </StoriesProvider>
   );

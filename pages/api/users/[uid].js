@@ -1,7 +1,7 @@
 import { auth, getEmailSettings } from 'utils/firebase/admin';
 import { METHODS, methodNotAllowed } from 'utils/operations';
 import sendMail, { buildEmailLink } from 'utils/mailer';
-import checkAuth from 'utils/auth-middleware';
+import checkAuth, { isAdmin } from 'utils/auth-middleware';
 
 const handlers = async (req, res) => {
   const { uid } = req.query;
@@ -45,6 +45,18 @@ const handlers = async (req, res) => {
       } catch (err) {
         console.error(err);
         return res.status(400).json(err);
+      }
+    case METHODS.DELETE:
+      await checkAuth(req, res);
+      try {
+        if (isAdmin(req.user)) {
+          await auth.deleteUser(uid);
+          return res.status(204).json({ success: true });
+        }
+        return res.status(403).json('Unauthorized');
+      } catch (err) {
+        console.log(err);
+        return res.status(500).json(err);
       }
     default:
       return methodNotAllowed(res, [METHODS.PUT, METHODS.POST]);

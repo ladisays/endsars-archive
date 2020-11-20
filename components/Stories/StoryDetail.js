@@ -2,15 +2,15 @@ import { useRouter } from 'next/router';
 import axios from 'axios';
 import Dropdown from 'react-bootstrap/Dropdown';
 
+import { formatEventDate } from 'utils/timeline';
 import Icon from 'components/Icon';
 import Toggle from 'components/Custom/Toggle';
 import useSubmit from 'hooks/useSubmit';
 import useAlerts from 'hooks/useAlerts';
 import Media from './Media';
-import { formatTime, getLocation } from './StoryItem';
 import styles from './story-detail.module.sass';
 
-const StoryDetail = ({ admin = false, id, title, text, ...story }) => {
+const StoryDetail = ({ admin = false, id, title, description, ...story }) => {
   const router = useRouter();
   const { showAlert } = useAlerts();
   const [updateStory] = useSubmit(
@@ -39,15 +39,15 @@ const StoryDetail = ({ admin = false, id, title, text, ...story }) => {
               <Dropdown.Menu>
                 <Dropdown.Item
                   eventKey="verify"
-                  disabled={story.disabled || story.active}
-                  onClick={() => updateStory({ active: true })}>
-                  {story.active ? 'Verified' : 'Verify'}
+                  disabled={story.disabled || story.verified}
+                  onClick={() => updateStory({ verified: true })}>
+                  {story.verified ? 'Verified' : 'Verify'}
                 </Dropdown.Item>
                 <Dropdown.Item
                   eventKey="disable"
                   disabled={story.disabled}
                   onClick={() =>
-                    updateStory({ disabled: true, active: false })
+                    updateStory({ disabled: true, verified: false })
                   }>
                   Disable
                 </Dropdown.Item>
@@ -57,12 +57,12 @@ const StoryDetail = ({ admin = false, id, title, text, ...story }) => {
         )}
       </div>
       <div>
-        <p>{text}</p>
+        <p>{description}</p>
       </div>
       <Media detail sources={story.media} />
       <div className={styles.footer}>
-        <div>{formatTime(story)}</div>
-        <div>{getLocation(story.location)}</div>
+        <div>{formatEventDate(story.eventDate)}</div>
+        <div>{story.location}</div>
       </div>
     </div>
   );

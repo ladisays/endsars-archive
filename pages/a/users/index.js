@@ -23,6 +23,7 @@ const Users = () => {
   const [setDisabled] = useSubmit((id) =>
     axios.put(`/api/users/${id}`, { disabled: true })
   );
+  const [deleteUser] = useSubmit((id) => axios.delete(`/api/users/${id}`));
   const onHide = () => {
     setActiveUser(null);
     setShow(false);
@@ -56,6 +57,7 @@ const Users = () => {
                   users={users}
                   onShow={onShow}
                   setDisabled={setDisabled}
+                  deleteUser={deleteUser}
                 />
               ) : (
                 <Alert variant="info">There are no users</Alert>

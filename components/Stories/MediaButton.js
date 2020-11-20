@@ -44,6 +44,10 @@ const MediaButton = ({ name = 'media' }) => {
 
   return (
     <div className={styles.media}>
+      <div className={styles.mediaBox}>
+        <Icon name="photo-video" size="lg" />
+        <div>Click to select media files</div>
+      </div>
       <input
         accept="image/*, video/*"
         type="file"
@@ -51,7 +55,6 @@ const MediaButton = ({ name = 'media' }) => {
         {...media}
         onChange={handleMediaChange}
       />
-      <Icon name="photo-video" size="lg" />
     </div>
   );
 };

@@ -25,14 +25,25 @@ export const Link = ({ children, className, onClick, ...props }) => {
   );
 };
 
-export const NavLink = ({ children, className, activeClassName, ...props }) => {
-  const { asPath } = useRouter();
-  // this is to check that paths match based on the trailing slash config
-  const [href] = getPaths(asPath);
+export const isActive = (href, asPath, exact) => {
+  if (exact) {
+    return href === asPath;
+  }
+  return asPath.startsWith(href);
+};
 
+export const NavLink = ({
+  children,
+  exact,
+  active,
+  className,
+  activeClassName,
+  ...props
+}) => {
+  const { asPath } = useRouter();
   const classes =
-    href === props.href || href === props.as
-      ? buildClassNames(className, activeClassName) || 'active'
+    active || isActive(props.href, asPath, exact)
+      ? buildClassNames(className, activeClassName || 'active')
       : className;
 
   return (

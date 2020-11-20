@@ -1,5 +1,4 @@
 import Slider from 'components/Slider';
-import { Link } from 'components/Link';
 import { buildClassNames } from 'utils/classnames';
 import styles from './media.module.sass';
 
@@ -9,8 +8,12 @@ export const MediaSlider = ({ children, ...props }) => {
     speed: 500,
     slidesToShow: 1,
     slidesToScroll: 1,
-    nextArrow: <Slider.Arrow iconCss={styles.arrow} />,
-    prevArrow: <Slider.Arrow iconCss={styles.arrow} prev />
+    nextArrow: (
+      <Slider.Arrow iconCss={buildClassNames(styles.arrow, styles.next)} />
+    ),
+    prevArrow: (
+      <Slider.Arrow iconCss={buildClassNames(styles.arrow, styles.prev)} prev />
+    )
   };
   return (
     <Slider {...props} {...settings}>
@@ -19,9 +22,6 @@ export const MediaSlider = ({ children, ...props }) => {
   );
 };
 
-export const MediaImageLink = ({ children }) => (
-  <Link href="/stories/[id]/image/[position]">{children}</Link>
-);
 export const MediaImage = ({ src }) => <img src={src} alt="" />;
 export const MediaVideo = ({ src, mimetype }) => {
   return (

@@ -18,7 +18,7 @@ const useStories = () => {
       setFiltered(
         stories.filter((story) => {
           if (query.f === 'text') {
-            return !!story.text;
+            return !!story.description;
           }
           return !!story.media.find(filterSource(query.f));
         })

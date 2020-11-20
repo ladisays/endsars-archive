@@ -20,16 +20,21 @@ export const getStatus = (story = {}) => {
     return 'ban';
   }
 
-  return story.active ? 'check-circle' : 'clock';
+  return story.verified ? 'check-circle' : 'clock';
 };
 
-const StoryTable = ({ stories }) => {
+const StoryTable = ({ stories, onUpdate }) => {
   const router = useRouter();
-  const [setVerified] = useSubmit((id) =>
-    axios.put(`/api/stories/${id}`, { active: true })
+  const [setVerified] = useSubmit(
+    (id) => axios.put(`/api/stories/${id}`, { verified: true }),
+    {
+      onCompleted() {
+        onUpdate();
+      }
+    }
   );
   const [setDisabled] = useSubmit((id) =>
-    axios.put(`/api/stories/${id}`, { disabled: true, active: false })
+    axios.put(`/api/stories/${id}`, { disabled: true, verified: false })
   );
   return (
     <Table responsive="lg" hover className={styles.root}>
@@ -47,7 +52,7 @@ const StoryTable = ({ stories }) => {
           <tr key={story.id}>
             <td className="text-center">
               <Icon
-                data-active={story.active}
+                data-verified={story.verified}
                 data-disabled={story.disabled}
                 name={getStatus(story)}
               />
@@ -55,7 +60,9 @@ const StoryTable = ({ stories }) => {
             <td>
               <div>
                 <div>{story.title || 'Unavailable'}</div>
-                {story.text && <div className="text-muted">{story.text}</div>}
+                {story.description && (
+                  <div className="text-muted">{story.description}</div>
+                )}
               </div>
             </td>
             <td>{formatTime(story)}</td>
@@ -75,9 +82,9 @@ const StoryTable = ({ stories }) => {
                   </Dropdown.Item>
                   <Dropdown.Item
                     eventKey="verify"
-                    disabled={story.disabled || story.active}
+                    disabled={story.disabled || story.verified}
                     onClick={() => setVerified(story.id)}>
-                    {story.active ? 'Verified' : 'Verify'}
+                    {story.verify ? 'Verified' : 'Verify'}
                   </Dropdown.Item>
                   <Dropdown.Item
                     eventKey="disable"

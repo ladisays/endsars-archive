@@ -61,11 +61,15 @@ const DatePicker = ({
       }
     : undefined;
   const handleChange = (value) => {
-    let newValue = value;
-    if (newValue.constructor.name === 'Moment') {
-      newValue = value.format(format);
+    if (typeof props.onChange === 'function') {
+      props.onChange(value);
+    } else {
+      let newValue = value;
+      if (newValue.constructor.name === 'Moment') {
+        newValue = value.format(format);
+      }
+      helpers.setValue(newValue);
     }
-    helpers.setValue(newValue);
   };
 
   return (
@@ -73,7 +77,7 @@ const DatePicker = ({
       {label && <FormLabel>{label}</FormLabel>}
       {isMounted && (
         <Datetime
-          locale="de"
+          locale="en"
           timeFormat={timeFormat}
           dateFormat={format}
           renderInput={renderInput}
@@ -82,6 +86,7 @@ const DatePicker = ({
           value={field.value}
           isValidDate={isValidDate}
           closeOnSelect
+          utc
         />
       )}
     </Wrapper>

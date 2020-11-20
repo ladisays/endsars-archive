@@ -2,8 +2,9 @@ import { useState } from 'react';
 import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
 import Container from 'react-bootstrap/Container';
+import Button from 'react-bootstrap/Button';
 
-import { NavLink } from 'components/Link';
+import { Link, NavLink } from 'components/Link';
 import Login from 'components/Login';
 import useAuth from 'hooks/useAuth';
 import styles from './layout.module.sass';
@@ -25,8 +26,11 @@ const Layout = ({ children }) => {
             <Navbar.Toggle aria-controls="nav" />
             <Navbar.Collapse id="nav">
               <Nav className="ml-auto">
-                <NavLink activeClassName={styles.active} href="/">
+                <NavLink exact activeClassName={styles.active} href="/">
                   Home
+                </NavLink>
+                <NavLink activeClassName={styles.active} href="/timeline">
+                  Timeline
                 </NavLink>
                 {isAnonymous && (
                   <NavLink
@@ -37,10 +41,15 @@ const Layout = ({ children }) => {
                   </NavLink>
                 )}
                 {(roles.admin || roles.verifier) && (
-                  <NavLink activeClassName={styles.active} href="/a">
+                  <NavLink exact activeClassName={styles.active} href="/a">
                     Dashboard
                   </NavLink>
                 )}
+              </Nav>
+              <Nav className="ml-lg-3">
+                <Button as={Link} href="/new">
+                  Share your story
+                </Button>
               </Nav>
             </Navbar.Collapse>
           </Container>

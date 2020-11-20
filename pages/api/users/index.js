@@ -1,20 +1,18 @@
 import { auth, getEmailSettings } from 'utils/firebase/admin';
 import { METHODS, methodNotAllowed } from 'utils/operations';
 import sendMail, { buildEmailLink } from 'utils/mailer';
-import checkAuth from 'utils/auth-middleware';
+import checkAuth, { isAdmin } from 'utils/auth-middleware';
 
 const handlers = async (req, res) => {
   switch (req.method) {
     case METHODS.GET:
       await checkAuth(req, res);
       try {
-        const { user } = req;
-
-        if (user.customClaims.admin) {
+        if (isAdmin(req.user)) {
           const result = await auth.listUsers();
           return res.status(200).json(result.users);
         }
-        return res.status(401).json({ message: 'Unauthorized' });
+        return res.status(403).json({ message: 'Unauthorized' });
       } catch (e) {
         return res.status(400).json(e);
       }
@@ -27,14 +25,14 @@ const handlers = async (req, res) => {
           if (!userId) {
             await checkAuth(req, res);
 
-            if (req.user.customClaims.admin) {
+            if (isAdmin(req.user)) {
               const user = await auth.createUser({
                 email,
                 emailVerified: false
               });
               userId = user.uid;
             } else {
-              return res.status(401).json({ message: 'Unauthorized' });
+              return res.status(403).json({ message: 'Unauthorized' });
             }
           }
           await auth.setCustomUserClaims(userId, roles);

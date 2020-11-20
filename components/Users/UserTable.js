@@ -6,7 +6,7 @@ import Toggle from 'components/Custom/Toggle';
 import Icon from 'components/Icon';
 import styles from './user-table.module.sass';
 
-const UserTable = ({ users, setDisabled, onShow }) => {
+const UserTable = ({ users, setDisabled, deleteUser, onShow }) => {
   return (
     <Table hover responsive="lg" className={styles.root}>
       <thead>
@@ -25,12 +25,10 @@ const UserTable = ({ users, setDisabled, onShow }) => {
               <tr key={user.uid}>
                 <td>{user.email}</td>
                 <td className="text-center">
-                  {user.customClaims && user.customClaims.verifier
-                    ? 'Yes'
-                    : 'No'}
+                  {user.customClaims?.verifier ? 'Yes' : 'No'}
                 </td>
                 <td className="text-center">
-                  {user.customClaims && user.customClaims.admin ? 'Yes' : 'No'}
+                  {user.customClaims?.admin ? 'Yes' : 'No'}
                 </td>
                 <td>
                   {user.metadata.lastSignInTime ? (
@@ -52,6 +50,10 @@ const UserTable = ({ users, setDisabled, onShow }) => {
                         disabled={user.disabled}
                         onClick={() => setDisabled(user.uid)}>
                         Disable
+                      </Dropdown.Item>
+                      <Dropdown.Divider />
+                      <Dropdown.Item onClick={() => deleteUser(user.uid)}>
+                        Delete
                       </Dropdown.Item>
                     </Dropdown.Menu>
                   </Dropdown>
