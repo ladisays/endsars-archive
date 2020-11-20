@@ -194,10 +194,12 @@ const NewStory = ({ story }) => {
               placeholder={dateFormat}
               onChange={(v) => {
                 let newValue = v;
+                let formatted = v;
                 if (v.constructor.name === 'Moment') {
                   newValue = v.toDate();
+                  formatted = v.format(dateFormat);
                 }
-                setFieldValue('formattedDate', v);
+                setFieldValue('formattedDate', formatted);
                 setFieldValue('eventDate', newValue);
               }}
               isValidDate={valid}
