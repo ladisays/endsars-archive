@@ -12,7 +12,7 @@ import { StoryList, StoryListTitle, StoryModal } from 'components/Stories';
 import { Timeline, TimelineBar } from 'components/Timeline';
 import Loading from 'components/Loading';
 
-export const getStaticPaths = async () => ({ paths: [], fallback: 'blocking' });
+export const getStaticPaths = async () => ({ paths: [], fallback: true });
 
 export const getStaticProps = async ({ params }) => {
   await connectDb();

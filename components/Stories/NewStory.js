@@ -32,7 +32,7 @@ const createFile = (file) => {
   });
 };
 
-export const uploadFile = (setState) => (source, idx) =>
+export const uploadFile = (setState) => (source) =>
   new Promise((resolve, reject) => {
     let ref;
     const mediaRef = storageRef().child('media');
@@ -52,11 +52,11 @@ export const uploadFile = (setState) => (source, idx) =>
       'state_changed',
       (snap) => {
         const progress = (snap.bytesTransferred / snap.totalBytes) * 100;
-        setState((s) => ({ ...s, [idx]: progress }));
+        setState((s) => ({ ...s, [source.id]: progress }));
       },
       (err) => {
         console.log(err);
-        setState((s) => ({ ...s, [idx]: 0 }));
+        setState((s) => ({ ...s, [source.id]: 0 }));
         reject(err);
       },
       async () => {
@@ -65,14 +65,13 @@ export const uploadFile = (setState) => (source, idx) =>
         resolve({
           src,
           path,
-          position: idx,
           type: source.type,
           mimetype: source.file.type
         });
       }
     );
   });
-
+const dateFormat = 'DD/MM/YYYY';
 const validationSchema = (isAdmin = false) =>
   object().shape({
     title: string().required('Title is required'),
@@ -82,16 +81,20 @@ const validationSchema = (isAdmin = false) =>
     city: isAdmin ? string().required('City is required') : undefined,
     location: string().required('Location is required'),
     verified: isAdmin ? bool() : undefined,
-    eventDate: string().required('The date of this event is required')
+    eventDate: string()
+      .test(
+        'eventDate',
+        'Date is invalid',
+        (value) => value && moment(value, dateFormat, true).isValid()
+      )
+      .required('Date is required')
   });
 
 const valid = (value) =>
   (moment.isMoment(value) && value.isSameOrBefore(new Date())) ||
   moment(value).isSameOrBefore(new Date());
 
-const dateFormat = 'DD/MM/YYYY';
-
-const NewStory = ({ story }) => {
+const NewStory = ({ story, onSuccess }) => {
   const formRef = useRef(null);
   const [state, setState] = useState({});
   const { roles } = useAuth();
@@ -104,9 +107,8 @@ const NewStory = ({ story }) => {
       author: (story && story.author) || '',
       city: (story && story.city) || '',
       location: (story && story.location) || '',
-      media: [],
-      eventDate: (story && story.eventDate) || '',
-      formattedDate: (story && moment(story.eventDate).format(dateFormat)) || ''
+      media: (story && story.media) || [],
+      eventDate: (story && moment(story.eventDate).format(dateFormat)) || ''
     }),
     [story]
   );
@@ -115,21 +117,31 @@ const NewStory = ({ story }) => {
   });
   const [onSubmit] = useSubmit(
     async (values) => {
-      if (story) {
-        return axios.put(`/api/stories/${story.id}`, values);
-      }
+      const updatedValues = {
+        ...values,
+        eventDate: moment(values.eventDate, dateFormat).toDate()
+      };
 
       let media = [];
 
       if (values.media.length) {
-        const promises = values.media.map(uploadFile(setState));
-        media = await Promise.all(promises);
+        media = values.media.filter((source) => !source.new);
+        const mediaToUpload = values.media.filter((source) => source.new);
+
+        if (mediaToUpload.length) {
+          const promises = mediaToUpload.map(uploadFile(setState));
+          const uploadedMedia = await Promise.all(promises);
+          media = [...media, ...uploadedMedia];
+        }
       }
 
-      return axios.post('/api/stories', {
-        ...values,
-        media
-      });
+      updatedValues.media = media;
+
+      if (story) {
+        return axios.put(`/api/stories/${story.id}`, updatedValues);
+      }
+
+      return axios.post('/api/stories', updatedValues);
     },
     {
       onCompleted() {
@@ -139,7 +151,11 @@ const NewStory = ({ story }) => {
             ? 'Story has been updated'
             : 'Your story was successfully created.'
         });
-        formRef.current.resetForm();
+        if (story && typeof onSuccess === 'function') {
+          onSuccess();
+        } else {
+          formRef.current.resetForm();
+        }
       },
       onError(err) {
         console.error(err);
@@ -188,20 +204,10 @@ const NewStory = ({ story }) => {
               placeholder="Tell us what happened..."
             />
             <Form.Date
-              name="formattedDate"
+              name="eventDate"
               label="Date"
               format={dateFormat}
               placeholder={dateFormat}
-              onChange={(v) => {
-                let newValue = v;
-                let formatted = v;
-                if (v.constructor.name === 'Moment') {
-                  newValue = v.toDate();
-                  formatted = v.format(dateFormat);
-                }
-                setFieldValue('formattedDate', formatted);
-                setFieldValue('eventDate', newValue);
-              }}
               isValidDate={valid}
               helpText="The date when this happened"
             />
@@ -235,7 +241,7 @@ const NewStory = ({ story }) => {
               {({ remove }) => (
                 <div className={styles.mediaContent}>
                   {values.media.map((m, i) => (
-                    <div key={i} className={styles.mediaFrame}>
+                    <div key={m.id} className={styles.mediaFrame}>
                       {m.type === 'image' && (
                         <img src={m.src} alt={values.author} />
                       )}
@@ -245,13 +251,13 @@ const NewStory = ({ story }) => {
                           <source src={m.src} type={m.file.type} />
                         </video>
                       )}
-                      {state[i] !== undefined ? (
+                      {state[m.id] !== undefined ? (
                         <div className={styles.progressHolder}>
                           <ProgressBar
                             variant="success"
-                            animated={state[i] !== 100}
-                            striped={state[i] !== 100}
-                            now={state[i] || 0}
+                            animated={state[m.id] !== 100}
+                            striped={state[m.id] !== 100}
+                            now={state[m.id] || 0}
                             className={styles.progress}
                           />
                         </div>

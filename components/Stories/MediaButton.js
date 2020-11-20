@@ -1,5 +1,6 @@
 import { useField } from 'formik';
 
+import { generateId } from 'utils/slugs';
 import Icon from 'components/Icon';
 import useAlerts from 'hooks/useAlerts';
 import styles from './media-button.module.sass';
@@ -20,7 +21,14 @@ const readFile = (file) =>
   new Promise((resolve) => {
     const reader = new FileReader();
     reader.onloadend = () => {
-      resolve({ file, src: reader.result, type: getType(file), progress: 0 });
+      resolve({
+        id: generateId(),
+        file,
+        src: reader.result,
+        type: getType(file),
+        progress: 0,
+        new: true
+      });
     };
     reader.readAsDataURL(file);
   });

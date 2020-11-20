@@ -17,6 +17,9 @@ const Story = () => {
     (id) => axios.get(`/api/stories/${id}`),
     { data: {} }
   );
+  const onSuccess = () => {
+    refetch(query.id);
+  };
 
   useEffect(() => {
     if (isIdle(loading)) {
@@ -33,7 +36,9 @@ const Story = () => {
       <Col xs={12}>
         {isPending(loading) && <Loading />}
         {isFailed(loading) && <div>An error occurred!</div>}
-        {isFulfilled(loading) && <NewStory story={story} />}
+        {isFulfilled(loading) && (
+          <NewStory story={story} onSuccess={onSuccess} />
+        )}
       </Col>
     </Row>
   );

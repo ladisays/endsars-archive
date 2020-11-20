@@ -38,7 +38,7 @@ const DatePicker = ({
   ...props
 }) => {
   const isMounted = useMounted();
-  const [field, meta, helpers] = useField(props);
+  const [{ onChange, ...field }, meta, helpers] = useField(props);
   const isInvalid = !!(meta.touched && meta.error);
   const controlProps = {
     ...field,
