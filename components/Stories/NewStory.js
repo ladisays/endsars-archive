@@ -82,10 +82,8 @@ const validationSchema = (isAdmin = false) =>
     location: string().required('Location is required'),
     verified: isAdmin ? bool() : undefined,
     eventDate: string()
-      .test(
-        'eventDate',
-        'Date is invalid',
-        (value) => value && moment(value, dateFormat, true).isValid()
+      .test('eventDate', 'Date is invalid', (value) =>
+        moment.utc(value).isValid()
       )
       .required('Date is required')
   });
@@ -108,7 +106,7 @@ const NewStory = ({ story, onSuccess }) => {
       city: (story && story.city) || '',
       location: (story && story.location) || '',
       media: (story && story.media) || [],
-      eventDate: (story && moment(story.eventDate).format(dateFormat)) || ''
+      eventDate: (story && moment(story.eventDate)) || ''
     }),
     [story]
   );
@@ -119,7 +117,7 @@ const NewStory = ({ story, onSuccess }) => {
     async (values) => {
       const updatedValues = {
         ...values,
-        eventDate: moment(values.eventDate, dateFormat).toDate()
+        eventDate: moment.utc(values.eventDate).toDate()
       };
 
       let media = [];
@@ -161,6 +159,7 @@ const NewStory = ({ story, onSuccess }) => {
         console.error(err);
         showAlert({
           variant: 'danger',
+          title: 'Error',
           text: story
             ? 'A problem occurred during update'
             : 'A problem occurred while creating your story'
@@ -179,7 +178,7 @@ const NewStory = ({ story, onSuccess }) => {
       onSubmit={onSubmit}>
       {({ values, isSubmitting, setFieldValue }) => (
         <Row>
-          <Col xs={12} lg={6}>
+          <Col xs={12} md={6}>
             <Form.Control
               name="title"
               label="Title"
@@ -203,18 +202,25 @@ const NewStory = ({ story, onSuccess }) => {
               label="Share your story"
               placeholder="Tell us what happened..."
             />
-            <Form.Date
-              name="eventDate"
-              label="Date"
-              format={dateFormat}
-              placeholder={dateFormat}
-              isValidDate={valid}
-              helpText="The date when this happened"
-            />
+            <Form.Row>
+              <Form.Date
+                col
+                xs={12}
+                lg={9}
+                xl={6}
+                name="eventDate"
+                label="Date"
+                format={dateFormat}
+                placeholder={dateFormat}
+                isValidDate={valid}
+                input={false}
+                helpText="The date when this occurred"
+              />
+            </Form.Row>
             <Form.Control
               name="location"
               label="Location"
-              helpText="The place where this happened?"
+              helpText="The place where this occurred?"
             />
             {(roles.admin || roles.verifier) && (
               <Form.Control as="select" name="city" label="City">
@@ -229,7 +235,7 @@ const NewStory = ({ story, onSuccess }) => {
               </Form.Control>
             )}
           </Col>
-          <Col xs={12} lg={6}>
+          <Col xs={12} md={6}>
             <Form.Control
               name="author"
               label="Author"

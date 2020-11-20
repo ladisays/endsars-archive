@@ -2,9 +2,9 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 
 const SITE_URL = process.env.NEXT_PUBLIC_DOMAIN_ADDRESS;
-const defaultTitle = '#EndSARS Archive';
+const defaultTitle = '#ENDSARS Archived';
 const defaultDescription =
-  'Share your story about police brutality in Nigeria. Help keep documentation by sharing your photos or videos from protests';
+  'Share your story about police brutality in Nigeria. Help keep documentation by sharing your photos or videos';
 const defaultSeparator = ' | ';
 
 const buildHref = (pathname) => `${SITE_URL}${pathname}`;

@@ -20,8 +20,8 @@ const Layout = ({ children }) => {
           <Container>
             <Navbar.Brand as={NavLink} href="/" className={styles.brand}>
               <span>#End</span>
-              <span>Police</span>
-              <span>Brutality</span>
+              <span>SARS</span>
+              <span>Archived</span>
             </Navbar.Brand>
             <Navbar.Toggle aria-controls="nav" />
             <Navbar.Collapse id="nav">

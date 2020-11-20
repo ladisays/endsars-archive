@@ -1,4 +1,4 @@
-import { Fragment } from 'react';
+import { Fragment, useState, useEffect } from 'react';
 import FormGroup from 'react-bootstrap/FormGroup';
 import FormControl from 'react-bootstrap/FormControl';
 import FormText from 'react-bootstrap/FormText';
@@ -6,8 +6,6 @@ import FormLabel from 'react-bootstrap/FormLabel';
 import Col from 'react-bootstrap/Col';
 import { useField } from 'formik';
 import Datetime from 'react-datetime';
-
-import useMounted from 'hooks/useMounted';
 
 const renderInput = ({ error, className, helpText, ...props }) => {
   return (
@@ -35,9 +33,16 @@ const DatePicker = ({
   lg,
   xl,
   isValidDate = undefined,
+  closeOnClickOutside,
+  closeOnTab,
+  closeOnSelect,
+  input = true,
   ...props
 }) => {
-  const isMounted = useMounted();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const [{ onChange, ...field }, meta, helpers] = useField(props);
   const isInvalid = !!(meta.touched && meta.error);
   const controlProps = {
@@ -66,7 +71,7 @@ const DatePicker = ({
     } else {
       let newValue = value;
       if (newValue.constructor.name === 'Moment') {
-        newValue = value.format(format);
+        newValue = input ? value.format(format) : value.toDate();
       }
       helpers.setValue(newValue);
     }
@@ -75,19 +80,27 @@ const DatePicker = ({
   return (
     <Wrapper {...groupProps}>
       {label && <FormLabel>{label}</FormLabel>}
-      {isMounted && (
+      {mounted && (
         <Datetime
+          utc
           locale="en"
           timeFormat={timeFormat}
           dateFormat={format}
+          isValidDate={isValidDate}
+          onChange={handleChange}
           renderInput={renderInput}
           inputProps={controlProps}
-          onChange={handleChange}
           value={field.value}
-          isValidDate={isValidDate}
-          closeOnSelect
-          utc
+          input={input}
+          closeOnSelect={input && closeOnSelect}
+          closeOnClickOutside={input && closeOnClickOutside}
+          closeOnTab={input && closeOnTab}
+          className={!input && isInvalid ? 'is-invalid' : ''}
         />
+      )}
+      {!input && helpText && <FormText muted>{helpText}</FormText>}
+      {!input && isInvalid && (
+        <FormControl.Feedback type="invalid">{meta.error}</FormControl.Feedback>
       )}
     </Wrapper>
   );
