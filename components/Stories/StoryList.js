@@ -22,7 +22,7 @@ export const StoryListTitle = ({ dates = [] }) => {
     name: ''
   };
   const handleSelect = (key) => {
-    push('/stories/[[...slugs]]', `/stories/${year}/${month}/${day}/${key}`);
+    push('/timeline/[[...slugs]]', `/timeline/${year}/${month}/${day}/${key}`);
   };
 
   return (
