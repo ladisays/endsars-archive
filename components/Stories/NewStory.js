@@ -198,7 +198,7 @@ const NewStory = ({ story }) => {
                 if (newValue.constructor.name === 'Moment') {
                   setFieldValue('formattedDate', newValue.format(dateFormat));
                   if (newValue.isValid()) {
-                    setFieldValue('eventDate', new Date(newValue).getTime());
+                    setFieldValue('eventDate', new Date(v).getTime());
                   }
                 }
               }}
