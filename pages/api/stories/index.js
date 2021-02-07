@@ -15,7 +15,7 @@ const handler = async (req, res) => {
       }
     case METHODS.GET:
       try {
-        const stories = await Story.find(req.query);
+        const stories = await Story.find(req.query).sort('-createdAt');
         return res.status(200).json(stories);
       } catch (err) {
         return res.status(500).json(err);

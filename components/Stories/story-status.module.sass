@@ -1,0 +1,19 @@
+@import styles/colors
+
+.root
+  background-color: rgba($black,0.25)
+  color: $black
+  padding: 0.125rem 0.35rem
+  font-size: 0.75rem
+  font-weight: 500
+  border-radius: 0.25rem
+  &[data-status="0"]
+    background-color: rgba($red, 0.25)
+    color: $red
+  &[data-status="2"]
+    background-color: rgba($blue, 0.25)
+    color: $blue
+  &[data-status="3"]
+    background-color: rgba($green, 0.25)
+    color: $green
+    

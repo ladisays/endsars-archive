@@ -6,7 +6,12 @@ import axios from 'axios';
 
 import Toggle from 'components/Custom/Toggle';
 import Icon from 'components/Icon';
+import { Link } from 'components/Link';
 import useSubmit from 'hooks/useSubmit';
+import useAuth from 'hooks/useAuth';
+import { statuses, getStatusLabel } from 'utils/status';
+import { canVerify, canModerate } from 'utils/roles';
+import StoryStatus from './StoryStatus';
 import styles from './story-table.module.sass';
 
 export const formatTime = (story = {}) => {
@@ -15,33 +20,42 @@ export const formatTime = (story = {}) => {
   return moment(timestamp).format('DD MMM');
 };
 
-export const getStatus = (story = {}) => {
-  if (story.disabled) {
-    return 'ban';
-  }
-
-  return story.verified ? 'check-circle' : 'clock';
-};
+const formatStoryDate = (date) => moment.utc(date).format('MMM D, YYYY');
+const verifyStory = (id, status) =>
+  axios.post(`/api/stories/${id}/verify`, { status });
+const approveStory = (id, status) =>
+  axios.post(`/api/stories/${id}/approve`, { status });
 
 const StoryTable = ({ stories, onUpdate }) => {
   const router = useRouter();
-  const [setVerified] = useSubmit(
-    (id) => axios.put(`/api/stories/${id}`, { verified: true }),
-    {
-      onCompleted() {
-        onUpdate();
-      }
+  const { role } = useAuth();
+  const [setVerification] = useSubmit(verifyStory, {
+    onCompleted() {
+      onUpdate();
     }
-  );
-  const [setDisabled] = useSubmit((id) =>
-    axios.put(`/api/stories/${id}`, { disabled: true, verified: false })
-  );
+  });
+  const [setApproval] = useSubmit(approveStory, {
+    onCompleted() {
+      onUpdate();
+    }
+  });
+  const handleVerification = (id, status) => () => {
+    if (canVerify(role)) {
+      setVerification(id, status);
+    }
+  };
+  const handleApproval = (id, status) => () => {
+    if (canModerate(role)) {
+      setApproval(id, status);
+    }
+  };
+
   return (
     <Table responsive="lg" hover className={styles.root}>
       <thead>
         <tr>
-          <th />
           <th>Story</th>
+          <th />
           <th>Date</th>
           <th className="text-center">Media</th>
           <th />
@@ -50,50 +64,103 @@ const StoryTable = ({ stories, onUpdate }) => {
       <tbody>
         {stories.map((story) => (
           <tr key={story.id}>
-            <td className="text-center">
-              <Icon
-                data-verified={story.verified}
-                data-disabled={story.disabled}
-                name={getStatus(story)}
-              />
-            </td>
             <td>
-              <div>
+              <Link href={`/stories/${story.id}`}>
                 <div>{story.title || 'Unavailable'}</div>
                 {story.description && (
                   <div className="text-muted">{story.description}</div>
                 )}
-              </div>
+              </Link>
             </td>
-            <td>{formatTime(story)}</td>
-            <td className="text-center">{story.media?.length || 0}</td>
+            <td>
+              <Link href={`/stories/${story.id}`}>
+                <StoryStatus status={story.status} />
+              </Link>
+            </td>
+            <td>
+              <Link href={`/stories/${story.id}`}>
+                {formatStoryDate(story.eventDate)}
+              </Link>
+            </td>
             <td className="text-center">
-              <Dropdown alignRight>
-                <Dropdown.Toggle as={Toggle} id={story.id}>
-                  <Icon name="ellipsis-h" />
-                </Dropdown.Toggle>
-                <Dropdown.Menu>
-                  <Dropdown.Item
-                    eventKey="view"
-                    onClick={() => {
-                      router.push('/a/stories/[id]', `/a/stories/${story.id}`);
-                    }}>
-                    View
-                  </Dropdown.Item>
-                  <Dropdown.Item
-                    eventKey="verify"
-                    disabled={story.disabled || story.verified}
-                    onClick={() => setVerified(story.id)}>
-                    {story.verify ? 'Verified' : 'Verify'}
-                  </Dropdown.Item>
-                  <Dropdown.Item
-                    eventKey="disable"
-                    disabled={story.disabled}
-                    onClick={() => setDisabled(story.id)}>
-                    Disable
-                  </Dropdown.Item>
-                </Dropdown.Menu>
-              </Dropdown>
+              <Link href={`/stories/${story.id}`}>
+                {story.media?.length || 0}
+              </Link>
+            </td>
+            <td className="text-center">
+              {canVerify(role) && (
+                <Dropdown alignRight>
+                  <Dropdown.Toggle as={Toggle} id={story.id}>
+                    <Icon name="ellipsis-h" />
+                  </Dropdown.Toggle>
+                  <Dropdown.Menu>
+                    <Dropdown.Item
+                      eventKey="edit"
+                      onClick={() => {
+                        router.push(
+                          '/a/stories/[id]',
+                          `/a/stories/${story.id}`
+                        );
+                      }}>
+                      Edit
+                    </Dropdown.Item>
+                    <Dropdown.Item
+                      eventKey={statuses.VERIFIED}
+                      disabled={
+                        story.status !== statuses.DISABLED ||
+                        story.status === statuses.VERIFIED ||
+                        story.status === statuses.APPROVED
+                      }
+                      onClick={handleVerification(story.id, statuses.VERIFIED)}>
+                      {getStatusLabel(statuses.VERIFIED)}
+                    </Dropdown.Item>
+                    {canModerate(role) && (
+                      <Dropdown.Item
+                        eventKey={statuses.APPROVED}
+                        disabled={
+                          story.status === statuses.DISABLED ||
+                          story.status === statuses.APPROVED ||
+                          story.status === statuses.UNVERIFIED
+                        }
+                        onClick={handleApproval(story.id, statuses.APPROVED)}>
+                        {getStatusLabel(statuses.APPROVED)}
+                      </Dropdown.Item>
+                    )}
+                    {(canVerify(role) || canModerate(role)) && (
+                      <>
+                        <Dropdown.Divider />
+                        <Dropdown.Item
+                          eventKey={statuses.UNVERIFIED}
+                          disabled={
+                            story.status === statuses.DISABLED ||
+                            story.status === statuses.UNVERIFIED
+                          }
+                          onClick={handleVerification(
+                            story.id,
+                            statuses.UNVERIFIED
+                          )}>
+                          {getStatusLabel(statuses.UNVERIFIED)}
+                        </Dropdown.Item>
+                        {canModerate(role) && (
+                          <Dropdown.Item
+                            eventKey={statuses.DISABLED}
+                            disabled={story.status === statuses.DISABLED}
+                            className={
+                              story.status !== statuses.DISABLED &&
+                              'text-danger'
+                            }
+                            onClick={handleApproval(
+                              story.id,
+                              statuses.DISABLED
+                            )}>
+                            {getStatusLabel(statuses.DISABLED)}
+                          </Dropdown.Item>
+                        )}
+                      </>
+                    )}
+                  </Dropdown.Menu>
+                </Dropdown>
+              )}
             </td>
           </tr>
         ))}

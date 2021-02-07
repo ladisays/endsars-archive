@@ -1,17 +1,15 @@
-import { useState } from 'react';
 import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
 import Container from 'react-bootstrap/Container';
 import Button from 'react-bootstrap/Button';
 
 import { Link, NavLink } from 'components/Link';
-import Login from 'components/Login';
 import useAuth from 'hooks/useAuth';
+import { canView } from 'utils/roles';
 import styles from './layout.module.sass';
 
 const Layout = ({ children }) => {
-  const [show, setShow] = useState(false);
-  const { roles, isAnonymous } = useAuth();
+  const { role, isAnonymous } = useAuth();
 
   return (
     <>
@@ -33,16 +31,16 @@ const Layout = ({ children }) => {
                   Timeline
                 </NavLink>
                 {isAnonymous && (
-                  <NavLink
-                    activeClassName={styles.active}
-                    href="/"
-                    onClick={() => setShow(true)}>
+                  <NavLink activeClassName={styles.active} href="/auth/login">
                     Login
                   </NavLink>
                 )}
-                {(roles.admin || roles.verifier) && (
-                  <NavLink exact activeClassName={styles.active} href="/a">
-                    Dashboard
+                {canView(role) && (
+                  <NavLink
+                    exact
+                    activeClassName={styles.active}
+                    href="/a/stories">
+                    Admin
                   </NavLink>
                 )}
               </Nav>
@@ -58,7 +56,6 @@ const Layout = ({ children }) => {
           <div className={styles.content}>{children}</div>
         </main>
       </div>
-      {show && isAnonymous && <Login />}
     </>
   );
 };

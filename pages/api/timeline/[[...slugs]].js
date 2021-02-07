@@ -3,6 +3,7 @@ import { normalizeSlugs, buildDateRange } from 'utils/timeline';
 import connectDb from 'utils/db/connect';
 import Story from 'utils/db/models/Story';
 import City from 'utils/db/models/City';
+import { statuses } from 'utils/status';
 
 const handler = async (req, res) => {
   await connectDb();
@@ -19,7 +20,7 @@ const handler = async (req, res) => {
         const { year, month, day, citySlug, storySlug } = normalizeSlugs(
           req.query
         );
-        const query = { verified: true };
+        const query = { status: statuses.APPROVED };
 
         const $months = Story.getMonths({ ...query });
         const promises = [$months];

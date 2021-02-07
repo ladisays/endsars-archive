@@ -5,12 +5,13 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import axios from 'axios';
 import { FieldArray } from 'formik';
-import { bool, object, string } from 'yup';
+import { object, string } from 'yup';
 import moment from 'moment';
 
 import { storageRef } from 'utils/firebase';
 import { cleanSlug, generateId } from 'utils/slugs';
 import { isFulfilled } from 'utils/operations';
+import { canVerify } from 'utils/roles';
 import Form from 'components/Form';
 import Icon from 'components/Icon';
 import useSubmit from 'hooks/useSubmit';
@@ -72,18 +73,19 @@ export const uploadFile = (setState) => (source) =>
     );
   });
 const dateFormat = 'DD/MM/YYYY';
-const validationSchema = (isAdmin = false) =>
+const validationSchema = (isAuthorized = false) =>
   object().shape({
     title: string().required('Title is required'),
-    slug: isAdmin ? string().required('Slug is required') : undefined,
+    slug: isAuthorized ? string().required('Slug is required') : undefined,
     description: string(),
     author: string(),
-    city: isAdmin ? string().required('City is required') : undefined,
+    city: isAuthorized ? string().required('City is required') : undefined,
     location: string().required('Location is required'),
-    verified: isAdmin ? bool() : undefined,
     eventDate: string()
-      .test('eventDate', 'Date is invalid', (value) =>
-        moment.utc(value).isValid()
+      .test(
+        'eventDate',
+        'Date is invalid',
+        (value) => value && moment(value, dateFormat).isValid()
       )
       .required('Date is required')
   });
@@ -92,10 +94,12 @@ const valid = (value) =>
   (moment.isMoment(value) && value.isSameOrBefore(new Date())) ||
   moment(value).isSameOrBefore(new Date());
 
+const fetchCities = () => axios.get('/api/cities');
+
 const NewStory = ({ story, onSuccess }) => {
   const formRef = useRef(null);
   const [state, setState] = useState({});
-  const { roles } = useAuth();
+  const { role } = useAuth();
   const { showAlert } = useAlerts();
   const initialValues = useMemo(
     () => ({
@@ -106,18 +110,18 @@ const NewStory = ({ story, onSuccess }) => {
       city: (story && story.city) || '',
       location: (story && story.location) || '',
       media: (story && story.media) || [],
-      eventDate: (story && moment(story.eventDate)) || ''
+      eventDate: (story && moment(story.eventDate).format(dateFormat)) || ''
     }),
     [story]
   );
-  const [{ loading, data: cities }] = useAsync(() => axios.get('/api/cities'), {
+  const [{ loading, data: cities }] = useAsync(fetchCities, {
     data: []
   });
   const [onSubmit] = useSubmit(
     async (values) => {
       const updatedValues = {
         ...values,
-        eventDate: moment.utc(values.eventDate).toDate()
+        eventDate: moment(values.eventDate, dateFormat).toDate()
       };
 
       let media = [];
@@ -174,7 +178,7 @@ const NewStory = ({ story, onSuccess }) => {
       className={styles.root}
       initialValues={initialValues}
       enableReinitialize
-      validationSchema={validationSchema(roles.admin || roles.verifier)}
+      validationSchema={validationSchema(canVerify(role))}
       onSubmit={onSubmit}>
       {({ values, isSubmitting, setFieldValue }) => (
         <Row>
@@ -188,7 +192,7 @@ const NewStory = ({ story, onSuccess }) => {
                 setFieldValue('slug', cleanSlug(e.target.value));
               }}
             />
-            {(roles.admin || roles.verifier) && (
+            {canVerify(role) && (
               <Form.Control
                 name="slug"
                 label="Slug"
@@ -213,7 +217,6 @@ const NewStory = ({ story, onSuccess }) => {
                 format={dateFormat}
                 placeholder={dateFormat}
                 isValidDate={valid}
-                input={false}
                 helpText="The date when this occurred"
               />
             </Form.Row>
@@ -222,7 +225,7 @@ const NewStory = ({ story, onSuccess }) => {
               label="Location"
               helpText="The place where this occurred?"
             />
-            {(roles.admin || roles.verifier) && (
+            {canVerify(role) && (
               <Form.Control as="select" name="city" label="City">
                 {isFulfilled(loading) &&
                   cities.map((city) => (

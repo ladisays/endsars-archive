@@ -44,7 +44,7 @@ export const toArray = (snap) => {
 };
 
 export const getEmailSettings = () => ({
-  url: `${process.env.NEXT_PUBLIC_DOMAIN_ADDRESS}/a/users/verify`,
+  url: `${process.env.NEXT_PUBLIC_DOMAIN_ADDRESS}/auth/verify`,
   handleCodeInApp: true
 });
 

@@ -1,25 +1,28 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import Alert from 'react-bootstrap/Alert';
 import Button from 'react-bootstrap/Button';
 import axios from 'axios';
 
+import Icon from 'components/Icon';
 import Loading from 'components/Loading';
 import { getLayout } from 'components/Layouts/Admin';
 import UserTable from 'components/Users/UserTable';
 import { UserModal } from 'components/Users/UserForm';
 import useSubmit from 'hooks/useSubmit';
-import { useLazyAsync } from 'hooks/useBaseAsync';
-import { isPending, isFailed, isFulfilled, isIdle } from 'utils/operations';
+import { useAsync } from 'hooks/useBaseAsync';
+import useAuth from 'hooks/useAuth';
+import { isAdmin } from 'utils/roles';
+import { isPending, isFailed, isFulfilled } from 'utils/operations';
+
+const fetcher = () => axios.get('/api/users');
 
 const Users = () => {
+  const { role } = useAuth();
   const [show, setShow] = useState(false);
   const [activeUser, setActiveUser] = useState(null);
-  const [{ loading, data: users }, refetch] = useLazyAsync(
-    () => axios.get('/api/users'),
-    { data: [] }
-  );
+  const [{ loading, data: users }, refetch] = useAsync(fetcher, { data: [] });
   const [setDisabled] = useSubmit((id) =>
     axios.put(`/api/users/${id}`, { disabled: true })
   );
@@ -33,19 +36,18 @@ const Users = () => {
     setShow(true);
   };
 
-  useEffect(() => {
-    if (isIdle(loading)) {
-      refetch();
-    }
-  }, [loading, refetch]);
-
   return (
     <>
       <Row>
         <Col xs={12}>
-          <div className="d-flex justify-content-between">
-            <h4>Users</h4>
-            <Button onClick={onShow(null)}>Add user</Button>
+          <div className="d-flex justify-content-between mt-4">
+            <h2 className="m-0">Users</h2>
+            {isAdmin(role) && (
+              <Button variant="outline-primary" onClick={onShow(null)}>
+                <Icon name="plus" iconCss="mr-2" />
+                <span>Add user</span>
+              </Button>
+            )}
           </div>
         </Col>
         <Col className="mt-3">
@@ -69,7 +71,7 @@ const Users = () => {
           )}
         </Col>
       </Row>
-      {show && (
+      {isAdmin(role) && show && (
         <UserModal
           show={show}
           onHide={onHide}

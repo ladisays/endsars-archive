@@ -2,6 +2,7 @@ import { METHODS, methodNotAllowed } from 'utils/operations';
 import connectDb from 'utils/db/connect';
 import Country from 'utils/db/models/Country';
 import checkAuth from 'utils/auth-middleware';
+import { canVerify } from 'utils/roles';
 
 const handler = async (req, res) => {
   const { id } = req.query;
@@ -21,13 +22,17 @@ const handler = async (req, res) => {
     case METHODS.PUT:
       await checkAuth(req, res);
       try {
-        const country = await Country.findByIdAndUpdate(id, req.body, {
-          new: true
-        });
-        if (!country) {
-          return res.status(400).json({ success: false });
+        const { customClaims } = req.user;
+        if (canVerify(customClaims?.role)) {
+          const country = await Country.findByIdAndUpdate(id, req.body, {
+            new: true
+          });
+          if (!country) {
+            return res.status(400).json({ success: false });
+          }
+          return res.status(201).json(country);
         }
-        return res.status(201).json(country);
+        return res.status(403).json('Unauthorized');
       } catch (err) {
         return res.status(500).json(err);
       }

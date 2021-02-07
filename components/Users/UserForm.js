@@ -6,6 +6,7 @@ import { string, object, bool } from 'yup';
 import Form from 'components/Form';
 import useSubmit from 'hooks/useSubmit';
 import useAlerts from 'hooks/useAlerts';
+import { userRoles } from 'utils/roles';
 
 const validationSchema = object().shape({
   uid: string(),
@@ -22,10 +23,7 @@ const UserForm = ({ user, onUpdate, onHide }) => {
     () => ({
       uid: (user && user.uid) || '',
       email: (user && user.email) || '',
-      roles: (user && user.customClaims) || {
-        admin: false,
-        verifier: false
-      }
+      role: user?.customClaims?.role
     }),
     [user]
   );
@@ -54,8 +52,12 @@ const UserForm = ({ user, onUpdate, onHide }) => {
             readOnly={!!user}
             helpText={!!user && 'Email address cannot be changed'}
           />
-          <Form.Check grouped name="roles.verifier" label="Verifier" />
-          <Form.Check grouped name="roles.admin" label="Administrator" />
+          <Form.Control
+            as="select"
+            name="role"
+            label="Role"
+            options={userRoles}
+          />
           <Form.Button
             block
             size="sm"

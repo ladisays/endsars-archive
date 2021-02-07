@@ -15,7 +15,7 @@ const CountrySchema = new Schema(
       lowercase: true
     }
   },
-  { timestamps: true, autoIndex: false }
+  { timestamps: true }
 );
 
 CountrySchema.index(

@@ -4,9 +4,13 @@ import moment from 'moment';
 
 import Toggle from 'components/Custom/Toggle';
 import Icon from 'components/Icon';
+import useAuth from 'hooks/useAuth';
+import { canVerify } from 'utils/roles';
 import styles from './country-table.module.sass';
 
 const CountryTable = ({ countries, onShow }) => {
+  const { role } = useAuth();
+
   return (
     <Table hover responsive="lg" className={styles.root}>
       <thead>
@@ -14,7 +18,6 @@ const CountryTable = ({ countries, onShow }) => {
           <th>Name</th>
           <th>Slug</th>
           <th>Created</th>
-          <th>Updated</th>
           <th />
         </tr>
       </thead>
@@ -23,17 +26,20 @@ const CountryTable = ({ countries, onShow }) => {
           <tr key={country.id}>
             <td>{country.name}</td>
             <td>{country.slug}</td>
-            <td>{moment(country.createdAt).fromNow()}</td>
-            <td>{moment(country.updatedAt).fromNow()}</td>
+            <td>{moment(country.createdAt).format('MMM D, YYYY')}</td>
             <td className="text-center">
-              <Dropdown alignRight>
-                <Dropdown.Toggle as={Toggle} id={country.id}>
-                  <Icon name="ellipsis-h" />
-                </Dropdown.Toggle>
-                <Dropdown.Menu>
-                  <Dropdown.Item onClick={onShow(country)}>Edit</Dropdown.Item>
-                </Dropdown.Menu>
-              </Dropdown>
+              {canVerify(role) && (
+                <Dropdown alignRight>
+                  <Dropdown.Toggle as={Toggle} id={country.id}>
+                    <Icon name="ellipsis-h" />
+                  </Dropdown.Toggle>
+                  <Dropdown.Menu>
+                    <Dropdown.Item onClick={onShow(country)}>
+                      Edit
+                    </Dropdown.Item>
+                  </Dropdown.Menu>
+                </Dropdown>
+              )}
             </td>
           </tr>
         ))}

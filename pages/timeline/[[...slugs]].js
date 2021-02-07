@@ -7,6 +7,7 @@ import connectDb from 'utils/db/connect';
 import Story from 'utils/db/models/Story';
 import City from 'utils/db/models/City';
 import { normalizeSlugs, buildDateRange } from 'utils/timeline';
+import { statuses } from 'utils/status';
 import { StoriesProvider } from 'hooks/useStories';
 import { StoryList, StoryListTitle, StoryModal } from 'components/Stories';
 import { Timeline, TimelineBar } from 'components/Timeline';
@@ -23,7 +24,7 @@ export const getStaticProps = async ({ params }) => {
   let error = null;
   let notFound = false;
   const { year, month, day, citySlug, storySlug } = normalizeSlugs(params);
-  const query = { verified: true };
+  const query = { status: statuses.APPROVED };
 
   const $months = Story.getMonths({ ...query });
   const promises = [$months];
@@ -33,7 +34,6 @@ export const getStaticProps = async ({ params }) => {
     promises.push($timeline);
   } else {
     const eventDate = {};
-    console.log(year);
 
     if (year) {
       buildDateRange(eventDate, year);
@@ -122,7 +122,6 @@ export const getStaticProps = async ({ params }) => {
 const TimelinePage = ({ error, months, dates, stories, story }) => {
   const { isFallback, query } = useRouter();
   const { year, month, day, citySlug, storySlug } = normalizeSlugs(query);
-  console.log(year, month, day, citySlug, storySlug);
 
   if (error) {
     return <div> An error occurred!</div>;
@@ -140,7 +139,7 @@ const TimelinePage = ({ error, months, dates, stories, story }) => {
           <TimelineBar months={months} dates={dates} />
         </Col>
         <Col lg={9}>
-          {citySlug ? (
+          {year && month && day && citySlug ? (
             <StoriesProvider stories={stories}>
               <StoryListTitle dates={dates} />
               <StoryList error={error} />

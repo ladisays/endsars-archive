@@ -1,4 +1,4 @@
-import { useCallback, useReducer, useEffect, useRef, useMemo } from 'react';
+import { useCallback, useReducer, useEffect, useRef } from 'react';
 
 import { ACTIONS, STATUS, isIdle } from 'utils/operations';
 
@@ -12,6 +12,11 @@ const $initialState = {
 };
 const reducer = (state = $initialState, [type, payload]) => {
   switch (type) {
+    case ACTIONS.RESET:
+      return {
+        ...state,
+        loading: STATUS.idle
+      };
     case ACTIONS.PENDING:
       return {
         ...state,
@@ -42,32 +47,33 @@ export const useBaseAsync = (
 ) => {
   const mounted = useRef(false);
 
+  const initiator = useRef(fn);
   const options = { ...$initialState, ...initialState };
   const [state, dispatch] = useReducer(reducer, options);
-  const initiator = useMemo(() => fn, [fn]);
+  const { onCompleted, onError } = state;
   const execute = useCallback(
     async (...args) => {
       dispatch([ACTIONS.PENDING]);
 
       try {
-        const result = await Promise.resolve(initiator(...args));
+        const result = await Promise.resolve(initiator.current(...args));
 
         if (mounted.current) {
-          if (typeof state.onCompleted === 'function') {
-            state.onCompleted(result.data);
+          if (typeof onCompleted === 'function') {
+            onCompleted(result.data);
           }
           dispatch([ACTIONS.FULFILLED, result.data]);
         }
       } catch (e) {
         if (mounted.current) {
-          if (typeof state.onError === 'function') {
-            state.onError(e);
+          if (typeof onError === 'function') {
+            onError(e);
           }
           dispatch([ACTIONS.FAILED, e]);
         }
       }
     },
-    [initiator, state]
+    [onCompleted, onError]
   );
 
   useEffect(() => {
@@ -81,6 +87,13 @@ export const useBaseAsync = (
       mounted.current = false;
     };
   }, [execute, lazy, state.loading]);
+
+  useEffect(() => {
+    if (initiator.current !== fn) {
+      initiator.current = fn;
+      dispatch([ACTIONS.RESET]);
+    }
+  }, [fn]);
 
   return [state, execute];
 };

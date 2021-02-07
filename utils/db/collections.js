@@ -13,6 +13,11 @@ export const countries = {
   collection: 'countries'
 };
 
+export const tokens = {
+  model: 'Token',
+  collection: 'tokens'
+};
+
 export const toJSONDate = (doc, keys) => {
   if (!doc) {
     return;

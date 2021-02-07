@@ -20,7 +20,7 @@ const CitySchema = new Schema(
       ref: countries.model
     }
   },
-  { timestamps: true, autoIndex: false }
+  { timestamps: true }
 );
 
 CitySchema.index(

@@ -17,11 +17,10 @@ const validationSchema = object().shape({
   country: string().required('Country is required')
 });
 
+const fetchCountries = () => axios.get('/api/countries');
+
 const CityForm = ({ city, onUpdate, onHide }) => {
-  const [{ loading, data: countries }] = useAsync(
-    () => axios.get('/api/countries'),
-    { data: [] }
-  );
+  const [{ loading, data: countries }] = useAsync(fetchCountries, { data: [] });
   const { showAlert } = useAlerts();
   const initialValues = useMemo(
     () => ({

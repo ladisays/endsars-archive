@@ -6,6 +6,7 @@ import FormLabel from 'react-bootstrap/FormLabel';
 import Col from 'react-bootstrap/Col';
 import { useField } from 'formik';
 import Datetime from 'react-datetime';
+import moment from 'moment';
 
 const renderInput = ({ error, className, helpText, ...props }) => {
   return (
@@ -70,7 +71,7 @@ const DatePicker = ({
       props.onChange(value);
     } else {
       let newValue = value;
-      if (newValue.constructor.name === 'Moment') {
+      if (moment.isMoment(value)) {
         newValue = input ? value.format(format) : value.toDate();
       }
       helpers.setValue(newValue);
@@ -82,7 +83,7 @@ const DatePicker = ({
       {label && <FormLabel>{label}</FormLabel>}
       {mounted && (
         <Datetime
-          utc
+          // utc
           locale="en"
           timeFormat={timeFormat}
           dateFormat={format}

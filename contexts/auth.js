@@ -3,11 +3,6 @@ import cookies from 'js-cookie';
 
 import firebase from 'utils/firebase';
 
-const defaultRoles = {
-  admin: false,
-  verifier: false
-};
-
 const buildUser = ({
   uid,
   email,
@@ -30,7 +25,7 @@ const AuthContext = createContext({
   isAuthenticated: false,
   isAnonymous: false,
   user: null,
-  roles: defaultRoles
+  role: undefined
 });
 
 export const AuthProvider = (props) => {
@@ -38,13 +33,13 @@ export const AuthProvider = (props) => {
     isAuthenticated: false,
     isAnonymous: false,
     user: null,
-    roles: defaultRoles
+    role: null
   });
   const contextValue = useMemo(() => state, [state]);
 
   useEffect(() => {
     const unsubscribe = firebase.auth().onAuthStateChanged(async (user) => {
-      let roles = defaultRoles;
+      let role;
       if (user) {
         // set the uid to a cookie, to avoid multiple anonymous authentications
         cookies.set('esa_uid', user.uid);
@@ -53,8 +48,7 @@ export const AuthProvider = (props) => {
         if (!user.isAnonymous) {
           try {
             const { claims } = await user.getIdTokenResult();
-            const { admin, verifier } = claims;
-            roles = { admin: admin || false, verifier: verifier || false };
+            role = claims.role;
           } catch (e) {
             console.error(e);
           }
@@ -62,7 +56,7 @@ export const AuthProvider = (props) => {
         setState({
           isAuthenticated: true,
           isAnonymous: user.isAnonymous,
-          roles,
+          role,
           user: buildUser(user)
         });
       } else {

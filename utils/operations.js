@@ -8,7 +8,8 @@ export const METHODS = {
 export const ACTIONS = {
   FAILED: 'FAILED',
   FULFILLED: 'FULFILLED',
-  PENDING: 'PENDING'
+  PENDING: 'PENDING',
+  RESET: 'RESET'
 };
 export const STATUS = {
   failed: 'failed',
