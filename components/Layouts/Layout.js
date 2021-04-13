@@ -4,6 +4,7 @@ import Container from 'react-bootstrap/Container';
 import Button from 'react-bootstrap/Button';
 
 import { Link, NavLink } from 'components/Link';
+import Footer from 'components/Footer';
 import useAuth from 'hooks/useAuth';
 import { canView } from 'utils/roles';
 import styles from './layout.module.sass';
@@ -26,6 +27,9 @@ const Layout = ({ children }) => {
               <Nav className="ml-auto">
                 <NavLink exact activeClassName={styles.active} href="/">
                   Home
+                </NavLink>
+                <NavLink exact activeClassName={styles.active} href="/#about">
+                  About
                 </NavLink>
                 <NavLink activeClassName={styles.active} href="/timeline">
                   Timeline
@@ -56,6 +60,7 @@ const Layout = ({ children }) => {
           <div className={styles.content}>{children}</div>
         </main>
       </div>
+      <Footer />
     </>
   );
 };
