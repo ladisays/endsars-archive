@@ -1,0 +1,29 @@
+.root
+  width: 100%
+  main
+    flex: 1
+
+  .flow
+    position: relative
+    overflow-y: auto
+    flex-grow: 1
+
+  .brand
+    text-transform: uppercase
+    display: flex
+    align-items: baseline
+    padding-left: 0
+    padding-right: 0
+    span
+      font-weight: bold
+      line-height: 1
+      color: var(--danger)
+      &:last-child
+        font-size: 0.875rem
+        margin-left: 0.5rem
+        color: var(--primary)
+
+@media only screen and (min-width: 992px)
+  .content
+    height: 100%
+    // padding: 0 1rem

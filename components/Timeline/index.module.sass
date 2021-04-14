@@ -1,0 +1,41 @@
+// .root
+//   // border-left: 1px solid rgba(0,0,0,0.1)
+//   padding: 0 2rem
+.dayTitle
+  padding: 0.5rem 1rem
+
+.dayItem
+  border-top: 1px solid rgba(0,0,0,0.05)
+  .city
+    padding: 1rem
+    margin-bottom: 1rem
+    display: flex
+    align-items: center
+    justify-content: center
+    height: 4rem
+    border-radius: 0.25rem
+    border: 1px solid rgba(0,0,0,0.1)
+    transition: all .1s ease-out
+    text-transform: uppercase
+    font-size: 0.75rem
+    letter-spacing: 0.1rem
+    &:hover
+      background-color: var(--primary)
+      color: var(--white)
+      text-decoration: none
+      font-weight: bold
+      box-shadow: 0 4px 10px 0 rgba(0,0,0,0.25)
+.timelineBar
+  border: 1px solid rgba(0,0,0,0.1)
+  border-radius: 0.25rem
+  .barTitle
+    text-transform: uppercase
+    font-size: 0.75rem
+    font-weight: bold
+    letter-spacing: 0.1rem
+    padding: 0.5rem 1rem
+  .barItem
+    color: #aaaaaa
+    &:hover:not(:global(.active))
+      color: var(--primary)
+      

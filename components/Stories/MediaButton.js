@@ -1,6 +1,8 @@
 import { useField } from 'formik';
 
+import { generateId } from 'utils/slugs';
 import Icon from 'components/Icon';
+import useAlerts from 'hooks/useAlerts';
 import styles from './media-button.module.sass';
 
 const getType = (file) => {
@@ -19,7 +21,14 @@ const readFile = (file) =>
   new Promise((resolve) => {
     const reader = new FileReader();
     reader.onloadend = () => {
-      resolve({ file, src: reader.result, type: getType(file), progress: 0 });
+      resolve({
+        id: generateId(),
+        file,
+        src: reader.result,
+        type: getType(file),
+        progress: 0,
+        new: true
+      });
     };
     reader.readAsDataURL(file);
   });
@@ -27,13 +36,15 @@ const readFile = (file) =>
 const getSources = (files) => Promise.all(Array.from(files).map(readFile));
 
 const MediaButton = ({ name = 'media' }) => {
+  const { showAlert } = useAlerts();
   const [{ value, ...media }, , helpers] = useField(name);
   const handleMediaChange = async (event) => {
     const sources = await getSources(event.target.files);
-    console.log(sources);
     const newValue = [...value, ...sources];
     if (newValue.length > 4) {
-      helpers.setError('You can only select up to 4 files');
+      const text = 'You can only select up to 4 files';
+      helpers.setError(text);
+      showAlert({ text, variant: 'danger' });
     } else {
       helpers.setValue(newValue);
     }
@@ -41,6 +52,10 @@ const MediaButton = ({ name = 'media' }) => {
 
   return (
     <div className={styles.media}>
+      <div className={styles.mediaBox}>
+        <Icon name="photo-video" size="lg" />
+        <div>Click to select media files</div>
+      </div>
       <input
         accept="image/*, video/*"
         type="file"
@@ -48,7 +63,6 @@ const MediaButton = ({ name = 'media' }) => {
         {...media}
         onChange={handleMediaChange}
       />
-      <Icon name="photo-video" size="lg" />
     </div>
   );
 };

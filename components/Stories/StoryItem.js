@@ -1,47 +1,58 @@
+import { useRouter } from 'next/router';
 import Card from 'react-bootstrap/Card';
 import Col from 'react-bootstrap/Col';
-import moment from 'moment';
 
+import { normalizeSlugs, formatEventDate } from 'utils/timeline';
 import { Link } from 'components/Link';
-import { MediaItem } from './Media';
+import Media from './Media';
 import styles from './story-item.module.sass';
 
-export const formatTime = (story = {}) => {
-  const timestamp = story.eventDate || story.createdAt;
+export const StoryLink = ({ slug, children, className }) => {
+  const { query } = useRouter();
+  const { year, month, day, citySlug } = normalizeSlugs(query);
+  const url = `/timeline/${year}/${month}/${day}/${citySlug}/${slug}`;
 
-  return moment(timestamp).fromNow();
+  return (
+    <Link href={url} className={className}>
+      {children}
+    </Link>
+  );
 };
 
-export const StoryLink = ({ id, children, className }) => (
-  <Link href="/stories/[id]" as={`/stories/${id}`} className={className}>
-    {children}
-  </Link>
-);
+const Story = ({ slug, description, title, media, ...story }) => {
+  const { query } = useRouter();
+  const showAll = query.f === undefined;
+  const imageFilter = showAll || query.f === 'image';
+  const videoFilter = showAll || query.f === 'video';
+  const textFilter = showAll || query.f === 'text';
 
-const Story = ({ id, text, title, media, ...story }) => {
   return (
     <Col className={styles.root}>
       <Card className={styles.card}>
-        <Card.Header className={styles.header}>
-          <StoryLink id={id} className={styles.link}>
-            {title || 'No title'}
-          </StoryLink>
-        </Card.Header>
         <Card.Body className={styles.body}>
-          {!!media.length && (
-            <MediaItem className={styles.media} {...media[0]} />
+          <Card.Title>
+            <StoryLink slug={slug} className={styles.link}>
+              {title || 'No title'}
+            </StoryLink>
+          </Card.Title>
+          {!!media.length && (imageFilter || videoFilter) && (
+            <Media
+              sources={media}
+              imageFilter={imageFilter}
+              videoFilter={videoFilter}
+            />
           )}
-          {text && (
-            <div className={styles.text}>
-              <StoryLink id={id} className={styles.link}>
-                {text}
+          {description && textFilter && (
+            <div data-media={showAll && !!media.length} className={styles.text}>
+              <StoryLink slug={slug} className={styles.link}>
+                {description}
               </StoryLink>
             </div>
           )}
         </Card.Body>
         <Card.Footer className={styles.footer}>
-          <div>{formatTime(story)}</div>
-          <div>Location</div>
+          <div>{formatEventDate(story.eventDate)}</div>
+          <div>{story.location}</div>
         </Card.Footer>
       </Card>
     </Col>

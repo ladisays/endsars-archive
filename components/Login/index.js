@@ -1,36 +1,31 @@
-import Card from 'react-bootstrap/Card';
+import Modal from 'react-bootstrap/Modal';
+import Alert from 'react-bootstrap/Alert';
 import axios from 'axios';
-import cookies from 'js-cookie';
 import { string, object } from 'yup';
 
 import Form from 'components/Form';
 import useSubmit from 'hooks/useSubmit';
+import { isFailed, isFulfilled } from 'utils/operations';
 
 const validationSchema = object().shape({
-  email: string().email('Invalid email').required('Email is required'),
-  password: string().required('Password is required')
+  email: string().email('Invalid email').required('Email is required')
 });
 
 const LoginForm = () => {
   const initialValues = {
     email: '',
-    password: ''
+    re_auth: true
   };
-  const [onSubmit] = useSubmit((values) => axios.post('/api/signup', values), {
-    onCompleted(data) {
-      cookies.set('esa_auth', JSON.stringify(data));
-    },
-    onError(error) {
-      console.log(error);
-    }
-  });
+  const [onSubmit, { submitting }] = useSubmit((values) =>
+    axios.post('/api/users', values)
+  );
 
   return (
-    <Card>
-      <Card.Header>
-        <strong>Please, sign in</strong>
-      </Card.Header>
-      <Card.Body>
+    <Modal show centered backdrop="static" keyboard={false}>
+      <Modal.Header>
+        <strong>Please, provide your email address</strong>
+      </Modal.Header>
+      <Modal.Body>
         <Form
           validationSchema={validationSchema}
           initialValues={initialValues}
@@ -38,19 +33,30 @@ const LoginForm = () => {
           {({ isSubmitting }) => (
             <>
               <Form.Control name="email" label="Email address" />
-              <Form.Control name="password" label="Password" type="password" />
               <Form.Button
                 block
+                size="sm"
                 pending={isSubmitting}
                 variant="success"
                 className="mx-auto py-2 px-4 font-weight-bold">
-                Sign in
+                Send
               </Form.Button>
             </>
           )}
         </Form>
-      </Card.Body>
-    </Card>
+        {isFailed(submitting) && (
+          <Alert variant="danger" className="mt-3">
+            An error occurred
+          </Alert>
+        )}
+        {isFulfilled(submitting) && (
+          <Alert variant="success" className="mt-3">
+            Your One-Time sign-in link has been successfully sent to your email
+            address
+          </Alert>
+        )}
+      </Modal.Body>
+    </Modal>
   );
 };
 

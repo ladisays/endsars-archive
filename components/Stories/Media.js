@@ -1,9 +1,27 @@
-import { Link } from 'components/Link';
+import Slider from 'components/Slider';
+import { buildClassNames } from 'utils/classnames';
 import styles from './media.module.sass';
 
-export const MediaImageLink = ({ children }) => (
-  <Link href="/stories/[id]/image/[position]">{children}</Link>
-);
+export const MediaSlider = ({ children, ...props }) => {
+  const settings = {
+    infinite: false,
+    speed: 500,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    nextArrow: (
+      <Slider.Arrow iconCss={buildClassNames(styles.arrow, styles.next)} />
+    ),
+    prevArrow: (
+      <Slider.Arrow iconCss={buildClassNames(styles.arrow, styles.prev)} prev />
+    )
+  };
+  return (
+    <Slider {...props} {...settings}>
+      {children}
+    </Slider>
+  );
+};
+
 export const MediaImage = ({ src }) => <img src={src} alt="" />;
 export const MediaVideo = ({ src, mimetype }) => {
   return (
@@ -20,17 +38,42 @@ export const MediaItem = ({ type, className, ...source }) => (
   </div>
 );
 
-const Media = ({ sources = [], className }) => {
-  if (!Array.isArray(sources) || !sources.length) {
+const Media = ({
+  sources = [],
+  className,
+  detail = false,
+  imageFilter,
+  videoFilter
+}) => {
+  if (!Array.isArray(sources)) {
+    return null;
+  }
+  let filtered = sources;
+  const filterType = (type) => (source) => source.type === type;
+
+  if (imageFilter && !videoFilter) {
+    filtered = filtered.filter(filterType('image'));
+  } else if (videoFilter && !imageFilter) {
+    filtered = filtered.filter(filterType('video'));
+  }
+
+  if (!filtered.length) {
     return null;
   }
 
+  const classes = buildClassNames(
+    className,
+    styles.media,
+    detail && styles.detail,
+    filtered.length > 1 && styles.multi
+  );
+
   return (
-    <div className={className || styles.media}>
-      {sources.map((source) => (
+    <MediaSlider className={classes}>
+      {filtered.map((source) => (
         <MediaItem key={source.id} {...source} />
       ))}
-    </div>
+    </MediaSlider>
   );
 };
 

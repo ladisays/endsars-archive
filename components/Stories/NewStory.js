@@ -1,18 +1,25 @@
 /* eslint-disable react/no-array-index-key */
-import { useRef, useState } from 'react';
-import Modal from 'react-bootstrap/Modal';
+import { useRef, useState, useMemo } from 'react';
 import ProgressBar from 'react-bootstrap/ProgressBar';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
 import axios from 'axios';
+import { FieldArray } from 'formik';
 import { object, string } from 'yup';
+import moment from 'moment';
 
-import { initFirebase, storageRef } from 'utils/firebase';
-import { generateId } from 'utils/slugs';
+import { storageRef } from 'utils/firebase';
+import { cleanSlug, generateId } from 'utils/slugs';
+import { isFulfilled } from 'utils/operations';
+import { canVerify } from 'utils/roles';
 import Form from 'components/Form';
+import Icon from 'components/Icon';
 import useSubmit from 'hooks/useSubmit';
+import useAlerts from 'hooks/useAlerts';
+import useAuth from 'hooks/useAuth';
+import { useAsync } from 'hooks/useBaseAsync';
 import MediaButton from './MediaButton';
 import styles from './new-story.module.sass';
-
-initFirebase();
 
 const createFile = (file) => {
   const re = /(?:\.([^.]+))?$/;
@@ -26,7 +33,7 @@ const createFile = (file) => {
   });
 };
 
-export const uploadFile = (setState) => (source, idx) =>
+export const uploadFile = (setState) => (source) =>
   new Promise((resolve, reject) => {
     let ref;
     const mediaRef = storageRef().child('media');
@@ -46,11 +53,11 @@ export const uploadFile = (setState) => (source, idx) =>
       'state_changed',
       (snap) => {
         const progress = (snap.bytesTransferred / snap.totalBytes) * 100;
-        setState((s) => ({ ...s, [idx]: progress }));
+        setState((s) => ({ ...s, [source.id]: progress }));
       },
       (err) => {
         console.log(err);
-        setState((s) => ({ ...s, [idx]: 0 }));
+        setState((s) => ({ ...s, [source.id]: 0 }));
         reject(err);
       },
       async () => {
@@ -59,113 +66,234 @@ export const uploadFile = (setState) => (source, idx) =>
         resolve({
           src,
           path,
-          position: idx,
           type: source.type,
           mimetype: source.file.type
         });
       }
     );
   });
+const dateFormat = 'DD/MM/YYYY';
+const validationSchema = (isAuthorized = false) =>
+  object().shape({
+    title: string().required('Title is required'),
+    slug: isAuthorized ? string().required('Slug is required') : undefined,
+    description: string(),
+    author: string(),
+    city: isAuthorized ? string().required('City is required') : undefined,
+    location: string().required('Location is required'),
+    eventDate: string()
+      .test(
+        'eventDate',
+        'Date is invalid',
+        (value) => value && moment(value, dateFormat).isValid()
+      )
+      .required('Date is required')
+  });
 
-const validationSchema = object().shape({
-  title: string().required('Title is required'),
-  text: string(),
-  author: string(),
-  location: string()
-});
+const valid = (value) =>
+  (moment.isMoment(value) && value.isSameOrBefore(new Date())) ||
+  moment(value).isSameOrBefore(new Date());
 
-const NewStory = ({ show = false, onHide }) => {
-  const [state, setState] = useState({});
+const fetchCities = () => axios.get('/api/cities');
+
+const NewStory = ({ story, onSuccess }) => {
   const formRef = useRef(null);
-  const initialValues = {
-    text: '',
-    author: '',
-    title: '',
-    media: []
-  };
+  const [state, setState] = useState({});
+  const { role } = useAuth();
+  const { showAlert } = useAlerts();
+  const initialValues = useMemo(
+    () => ({
+      title: (story && story.title) || '',
+      slug: (story && story.slug) || '',
+      description: (story && story.description) || '',
+      author: (story && story.author) || '',
+      city: (story && story.city) || '',
+      location: (story && story.location) || '',
+      media: (story && story.media) || [],
+      eventDate: (story && moment(story.eventDate).format(dateFormat)) || ''
+    }),
+    [story]
+  );
+  const [{ loading, data: cities }] = useAsync(fetchCities, {
+    data: []
+  });
   const [onSubmit] = useSubmit(
     async (values) => {
+      const updatedValues = {
+        ...values,
+        eventDate: moment(values.eventDate, dateFormat).toDate()
+      };
+
       let media = [];
 
       if (values.media.length) {
-        console.log('we have media to upload');
-        const promises = values.media.map(uploadFile(setState));
-        media = await Promise.all(promises);
+        media = values.media.filter((source) => !source.new);
+        const mediaToUpload = values.media.filter((source) => source.new);
+
+        if (mediaToUpload.length) {
+          const promises = mediaToUpload.map(uploadFile(setState));
+          const uploadedMedia = await Promise.all(promises);
+          media = [...media, ...uploadedMedia];
+        }
       }
 
-      return axios.post('/api/stories', {
-        ...values,
-        media
-      });
+      updatedValues.media = media;
+
+      if (story) {
+        return axios.put(`/api/stories/${story.id}`, updatedValues);
+      }
+
+      return axios.post('/api/stories', updatedValues);
     },
     {
       onCompleted() {
-        formRef.current.resetForm();
-        onHide();
+        showAlert({
+          title: 'Success',
+          text: story
+            ? 'Story has been updated'
+            : 'Your story was successfully created.'
+        });
+        if (story && typeof onSuccess === 'function') {
+          onSuccess();
+        } else {
+          formRef.current.resetForm();
+        }
       },
       onError(err) {
         console.error(err);
+        showAlert({
+          variant: 'danger',
+          title: 'Error',
+          text: story
+            ? 'A problem occurred during update'
+            : 'A problem occurred while creating your story'
+        });
       }
     }
   );
 
   return (
-    <Modal show={show} onHide={onHide} centered scrollable>
-      <Form
-        ref={formRef}
-        initialValues={initialValues}
-        validationSchema={validationSchema}
-        onSubmit={onSubmit}>
-        {({ values, isSubmitting }) => (
-          <>
-            <Modal.Header closeButton />
-            <Modal.Body>
+    <Form
+      ref={formRef}
+      className={styles.root}
+      initialValues={initialValues}
+      enableReinitialize
+      validationSchema={validationSchema(canVerify(role))}
+      onSubmit={onSubmit}>
+      {({ values, isSubmitting, setFieldValue }) => (
+        <Row>
+          <Col xs={12} md={6}>
+            <Form.Control
+              name="title"
+              label="Title"
+              placeholder="A short description"
+              onChange={(e) => {
+                setFieldValue('title', e.target.value);
+                setFieldValue('slug', cleanSlug(e.target.value));
+              }}
+            />
+            {canVerify(role) && (
               <Form.Control
-                name="title"
-                label="Title"
-                placeholder="A short description"
+                name="slug"
+                label="Slug"
+                placeholder="e.g. a-short-identifier"
+                helpText="The url-friendly value for this story's title"
               />
-              <Form.Control
-                name="author"
-                label="Your name"
-                placeholder="John Doe"
+            )}
+            <Form.Control
+              name="description"
+              as="textarea"
+              label="Share your story"
+              placeholder="Tell us what happened..."
+            />
+            <Form.Row>
+              <Form.Date
+                col
+                xs={12}
+                lg={9}
+                xl={6}
+                name="eventDate"
+                label="Date"
+                format={dateFormat}
+                placeholder={dateFormat}
+                isValidDate={valid}
+                helpText="The date when this occurred"
               />
-              <Form.Control
-                name="text"
-                as="textarea"
-                label="Share your story"
-                placeholder="Tell us what happened..."
-              />
-              <div className={styles.mediaContent}>
-                {values.media.map((m, i) => (
-                  <div key={i} className={styles.mediaFrame}>
-                    {m.type === 'image' && (
-                      <img src={m.src} alt={values.author} />
-                    )}
-                    {m.type === 'video' && (
-                      // eslint-disable-next-line jsx-a11y/media-has-caption
-                      <video controls playsInline preload="auto">
-                        <source src={m.src} type={m.file.type} />
-                      </video>
-                    )}
-                    <ProgressBar
-                      animated={state[i] !== 100}
-                      striped={state[i] !== 100}
-                      now={state[i] || 0}
-                      className={styles.progress}
+            </Form.Row>
+            <Form.Control
+              name="location"
+              label="Location"
+              helpText="The place where this occurred?"
+            />
+            {canVerify(role) && (
+              <Form.Control as="select" name="city" label="City">
+                {isFulfilled(loading) &&
+                  cities.map((city) => (
+                    <Form.Control.Option
+                      key={city.id}
+                      id={city.id}
+                      label={city.name}
                     />
-                  </div>
-                ))}
-              </div>
-            </Modal.Body>
-            <Modal.Footer className={styles.footer}>
-              <MediaButton />
-              <Form.Button pending={isSubmitting}>Share</Form.Button>
-            </Modal.Footer>
-          </>
-        )}
-      </Form>
-    </Modal>
+                  ))}
+              </Form.Control>
+            )}
+          </Col>
+          <Col xs={12} md={6}>
+            <Form.Control
+              name="author"
+              label="Author"
+              placeholder="The name of the author"
+              helpText="The author of the media files, if available"
+            />
+            <MediaButton />
+            <FieldArray name="media">
+              {({ remove }) => (
+                <div className={styles.mediaContent}>
+                  {values.media.map((m, i) => (
+                    <div key={m.id} className={styles.mediaFrame}>
+                      {m.type === 'image' && (
+                        <img src={m.src} alt={values.author} />
+                      )}
+                      {m.type === 'video' && (
+                        // eslint-disable-next-line jsx-a11y/media-has-caption
+                        <video controls playsInline preload="auto">
+                          <source src={m.src} type={m.file.type} />
+                        </video>
+                      )}
+                      {state[m.id] !== undefined ? (
+                        <div className={styles.progressHolder}>
+                          <ProgressBar
+                            variant="success"
+                            animated={state[m.id] !== 100}
+                            striped={state[m.id] !== 100}
+                            now={state[m.id] || 0}
+                            className={styles.progress}
+                          />
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          className={styles.mediaClose}
+                          onClick={() => remove(i)}>
+                          <Icon name="times" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </FieldArray>
+          </Col>
+          <Col xs={12} className={styles.footer}>
+            <Form.Group>
+              <Form.Button pending={isSubmitting}>
+                {story ? 'Update' : 'Share'}
+              </Form.Button>
+            </Form.Group>
+          </Col>
+        </Row>
+      )}
+    </Form>
   );
 };
 
