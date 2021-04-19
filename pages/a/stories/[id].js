@@ -12,6 +12,7 @@ import { getLayout } from 'components/Layouts/Admin';
 import Loading from 'components/Loading';
 import { Link } from 'components/Link';
 import Icon from 'components/Icon';
+import Meta from 'components/Layouts/Meta';
 
 const fetcher = (id) => axios.get(`/api/stories/${id}`);
 
@@ -33,6 +34,7 @@ const Story = () => {
   return (
     <Row>
       <Col xs={12} className="mb-3">
+        <Meta title={story?.title || 'Story'} noCrawl />
         <Button as={Link} size="sm" variant="outline-primary" href="/a/stories">
           <Icon name="arrow-left" iconCss="mr-2" />
           <span>Stories</span>

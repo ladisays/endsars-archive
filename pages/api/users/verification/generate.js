@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 
 import connectDb from 'utils/db/connect';
-import sendMail, { buildVerificationMail } from 'utils/mailer';
+import sendMail, { buildVerificationMail } from 'utils/mail/sender';
 import { auth, getEmailSettings } from 'utils/firebase/admin';
 import Token from 'utils/db/models/Token';
 import { METHODS, methodNotAllowed } from 'utils/operations';

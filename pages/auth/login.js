@@ -7,6 +7,7 @@ import Alert from 'react-bootstrap/Alert';
 import axios from 'axios';
 import { string, object } from 'yup';
 
+import Meta from 'components/Layouts/Meta';
 import Form from 'components/Form';
 import MultiForm from 'components/MultiForm';
 import useSubmit from 'hooks/useSubmit';
@@ -54,6 +55,7 @@ const Login = () => {
 
   return (
     <Container>
+      <Meta title="Login" />
       <Row>
         <Col md={{ span: 8, offset: 2 }} lg={{ span: 6, offset: 3 }}>
           <Row>
@@ -65,12 +67,13 @@ const Login = () => {
             <Col xs={12}>
               {isFailed(submitting) && (
                 <Alert variant="danger" className="mt-3">
-                  An error occurred
+                  <Alert.Heading>Oops! Something went wrong.</Alert.Heading>
+                  Ensure you have provided a valid email address
                 </Alert>
               )}
               {isFulfilled(submitting) && (
                 <Alert variant="success" className="mt-3">
-                  Your One-Time sign-in link has been successfully sent to your
+                  Your verification code has been successfully sent to your
                   email address
                 </Alert>
               )}

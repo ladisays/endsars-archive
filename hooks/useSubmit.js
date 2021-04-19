@@ -36,6 +36,7 @@ const reducer = (state = initialState, [type, payload]) => {
 const useSubmit = (submit = submitFn, options = {}) => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
+  // eslint-disable-next-line consistent-return
   const handleSubmit = async (...submitOptions) => {
     dispatch([ACTIONS.PENDING]);
 
@@ -44,11 +45,15 @@ const useSubmit = (submit = submitFn, options = {}) => {
       dispatch([ACTIONS.FULFILLED, result.data]);
       if (typeof options.onCompleted === 'function') {
         options.onCompleted(result.data);
+      } else {
+        return Promise.resolve(result.data);
       }
     } catch (error) {
       dispatch([ACTIONS.FAILED, error]);
       if (typeof options.onError === 'function') {
         options.onError(error);
+      } else {
+        return Promise.reject(error);
       }
     }
   };

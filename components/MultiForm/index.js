@@ -1,3 +1,4 @@
+/* eslint-disable consistent-return */
 import React, { useState } from 'react';
 
 import Form from 'components/Form';
@@ -10,6 +11,9 @@ const MultiForm = ({ children, initialValues, wizard = false, onSubmit }) => {
   const steps = React.Children.toArray(children);
 
   const step = steps[stepNumber];
+  // if (step.type !== Step) {
+  //   throw new Error('Only <Step /> components are valid children');
+  // }
   const totalSteps = steps.length;
   const isLastStep = stepNumber === totalSteps - 1;
   const { title, nextLabel, prevLabel } = step.props;
@@ -24,18 +28,25 @@ const MultiForm = ({ children, initialValues, wizard = false, onSubmit }) => {
     setStepNumber(Math.max(stepNumber - 1, 0));
   };
 
-  // eslint-disable-next-line consistent-return
   const handleSubmit = async (values, bag) => {
     if (step.props.onSubmit) {
-      await step.props.onSubmit(values, bag);
+      try {
+        await step.props.onSubmit(values, bag);
+        if (isLastStep) {
+          return onSubmit(values, bag);
+        }
+        bag.setTouched({});
+        next(values);
+      } catch (e) {
+        console.log(e);
+      }
+    } else {
+      if (isLastStep) {
+        return onSubmit(values, bag);
+      }
+      bag.setTouched({});
+      next(values);
     }
-
-    if (isLastStep) {
-      return onSubmit(values, bag);
-    }
-
-    bag.setTouched({});
-    next(values);
   };
 
   return (

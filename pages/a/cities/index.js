@@ -8,6 +8,7 @@ import axios from 'axios';
 import Icon from 'components/Icon';
 import Loading from 'components/Loading';
 import { getLayout } from 'components/Layouts/Admin';
+import Meta from 'components/Layouts/Meta';
 import CityTable from 'components/Cities/CityTable';
 import { CityModal } from 'components/Cities/CityForm';
 import useSubmit from 'hooks/useSubmit';
@@ -17,6 +18,7 @@ import { canVerify } from 'utils/roles';
 import { isPending, isFailed, isFulfilled } from 'utils/operations';
 
 const fetchCities = () => axios.get('/api/cities');
+const disableCity = (id) => axios.put(`/api/cities/${id}`, { disabled: true });
 
 const Cities = () => {
   const [show, setShow] = useState(false);
@@ -25,9 +27,7 @@ const Cities = () => {
   const [{ loading, data: cities }, refetch] = useAsync(fetchCities, {
     data: []
   });
-  const [setDisabled] = useSubmit((id) =>
-    axios.put(`/api/cities/${id}`, { disabled: true })
-  );
+  const [setDisabled] = useSubmit(disableCity);
   const onHide = () => {
     setActiveCity(null);
     setShow(false);
@@ -41,6 +41,7 @@ const Cities = () => {
     <>
       <Row>
         <Col xs={12}>
+          <Meta title="Cities" noCrawl />
           <div className="d-flex justify-content-between mt-4">
             <h2 className="m-0">Cities</h2>
             {canVerify(role) && (

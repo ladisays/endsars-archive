@@ -17,6 +17,7 @@ import { getLayout } from 'components/Layouts/Admin';
 import Loading from 'components/Loading';
 import { Link, NavLink } from 'components/Link';
 import Icon from 'components/Icon';
+import Meta from 'components/Layouts/Meta';
 import styles from 'styles/pages/a-stories.module.sass';
 
 const Stories = () => {
@@ -36,6 +37,7 @@ const Stories = () => {
     <Row>
       <Col xs={12}>
         <div className="d-flex justify-content-between mt-4">
+          <Meta title="Stories" noCrawl />
           <h2 className="m-0">Stories</h2>
           {canVerify(role) && (
             <Button variant="outline-primary" as={Link} href="/new">

@@ -2,6 +2,7 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 
 const SITE_URL = process.env.NEXT_PUBLIC_DOMAIN_ADDRESS;
+const domain = SITE_URL.split('://')[1];
 const defaultTitle = '#ENDSARS Archived';
 const defaultDescription =
   'Share your story about police brutality in Nigeria. Help keep documentation by sharing your photos or videos';
@@ -20,11 +21,12 @@ const generateMeta = (
 ) => {
   const metaTitle = setMetaTitle(title);
   const metaDescription = setDescription(description);
+  const metaImage = image || `${SITE_URL}/banner.jpg`;
 
   const metaTags = [
     { itemProp: 'name', content: metaTitle },
     { itemProp: 'description', content: metaDescription },
-    { itemProp: 'image', content: image || '' },
+    { itemProp: 'image', content: metaImage },
     { name: 'description', content: metaDescription },
     { property: 'og:title', content: metaTitle },
     { property: 'og:type', content: contentType || 'website' },
@@ -32,9 +34,15 @@ const generateMeta = (
     { property: 'og:locale', content: 'en' },
     { property: 'og:card', content: 'summary' },
     { property: 'og:creator', content: defaultTitle },
-    { property: 'og:image', content: image || '' },
+    { property: 'og:image', content: metaImage },
     { property: 'og:description', content: metaDescription },
-    { property: 'og:site_name', content: defaultTitle }
+    { property: 'og:site_name', content: defaultTitle },
+    { name: 'twitter:card', content: 'summary_large_image' },
+    { property: 'twitter:domain', content: domain },
+    { property: 'twitter:url', content: SITE_URL + pathname },
+    { property: 'twitter:title', content: metaTitle },
+    { property: 'twitter:description', content: metaDescription },
+    { property: 'twitter:image', content: metaImage }
   ];
 
   if (noCrawl) {

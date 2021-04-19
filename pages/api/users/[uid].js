@@ -1,6 +1,6 @@
 import { auth, getEmailSettings } from 'utils/firebase/admin';
 import { METHODS, methodNotAllowed } from 'utils/operations';
-import sendMail, { buildEmailLink } from 'utils/mailer';
+import sendMail, { buildInvitationMail } from 'utils/mail/sender';
 import checkAuth from 'utils/auth-middleware';
 import { isAdmin, roles } from 'utils/roles';
 
@@ -24,7 +24,7 @@ const handlers = async (req, res) => {
               email,
               getEmailSettings()
             );
-            await sendMail(buildEmailLink(email, link));
+            await sendMail(buildInvitationMail(email, link));
             return res.status(201).json({ message: 'Success' });
           }
           return res.status(403).end();
