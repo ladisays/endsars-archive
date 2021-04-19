@@ -8,6 +8,7 @@ import axios from 'axios';
 import Icon from 'components/Icon';
 import Loading from 'components/Loading';
 import { getLayout } from 'components/Layouts/Admin';
+import Meta from 'components/Layouts/Meta';
 import UserTable from 'components/Users/UserTable';
 import { UserModal } from 'components/Users/UserForm';
 import useSubmit from 'hooks/useSubmit';
@@ -17,16 +18,17 @@ import { isAdmin } from 'utils/roles';
 import { isPending, isFailed, isFulfilled } from 'utils/operations';
 
 const fetcher = () => axios.get('/api/users');
+const disableUserAccount = (id) =>
+  axios.put(`/api/users/${id}`, { disabled: true });
+const deleteUserAccount = (id) => axios.delete(`/api/users/${id}`);
 
 const Users = () => {
   const { role } = useAuth();
   const [show, setShow] = useState(false);
   const [activeUser, setActiveUser] = useState(null);
   const [{ loading, data: users }, refetch] = useAsync(fetcher, { data: [] });
-  const [setDisabled] = useSubmit((id) =>
-    axios.put(`/api/users/${id}`, { disabled: true })
-  );
-  const [deleteUser] = useSubmit((id) => axios.delete(`/api/users/${id}`));
+  const [setDisabled] = useSubmit(disableUserAccount);
+  const [deleteUser] = useSubmit(deleteUserAccount);
   const onHide = () => {
     setActiveUser(null);
     setShow(false);
@@ -40,6 +42,7 @@ const Users = () => {
     <>
       <Row>
         <Col xs={12}>
+          <Meta title="Users" noCrawl />
           <div className="d-flex justify-content-between mt-4">
             <h2 className="m-0">Users</h2>
             {isAdmin(role) && (

@@ -12,6 +12,7 @@ import { StoriesProvider } from 'hooks/useStories';
 import { StoryList, StoryListTitle, StoryModal } from 'components/Stories';
 import { Timeline, TimelineBar } from 'components/Timeline';
 import Loading from 'components/Loading';
+import Meta from 'components/Layouts/Meta';
 
 export const getStaticPaths = async () => ({ paths: [], fallback: true });
 
@@ -133,7 +134,10 @@ const TimelinePage = ({ error, months, dates, stories, story }) => {
 
   return (
     <Container>
-      {/* <Meta title={story.title} description={story.text} /> */}
+      <Meta
+        title={story?.title || 'Timeline'}
+        description={story?.text || ''}
+      />
       <Row>
         <Col lg={3}>
           <TimelineBar months={months} dates={dates} />

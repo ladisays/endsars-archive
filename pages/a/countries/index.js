@@ -8,6 +8,7 @@ import axios from 'axios';
 import Icon from 'components/Icon';
 import Loading from 'components/Loading';
 import { getLayout } from 'components/Layouts/Admin';
+import Meta from 'components/Layouts/Meta';
 import CountryTable from 'components/Countries/CountryTable';
 import { CountryModal } from 'components/Countries/CountryForm';
 import useSubmit from 'hooks/useSubmit';
@@ -17,6 +18,8 @@ import { canVerify } from 'utils/roles';
 import { isPending, isFailed, isFulfilled } from 'utils/operations';
 
 const fetchCountries = () => axios.get('/api/countries');
+const disableCountry = (id) =>
+  axios.put(`/api/countries/${id}`, { disabled: true });
 
 const Countries = () => {
   const [show, setShow] = useState(false);
@@ -25,9 +28,7 @@ const Countries = () => {
   const [{ loading, data: countries }, refetch] = useAsync(fetchCountries, {
     data: []
   });
-  const [setDisabled] = useSubmit((id) =>
-    axios.put(`/api/countries/${id}`, { disabled: true })
-  );
+  const [setDisabled] = useSubmit(disableCountry);
   const onHide = () => {
     setActiveCountry(null);
     setShow(false);
@@ -41,6 +42,7 @@ const Countries = () => {
     <>
       <Row>
         <Col xs={12}>
+          <Meta title="Countries" noCrawl />
           <div className="d-flex justify-content-between mt-4">
             <h2 className="m-0">Countries</h2>
             {canVerify(role) && (

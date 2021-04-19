@@ -2,7 +2,7 @@ import moment from 'moment';
 
 import { auth, getEmailSettings } from 'utils/firebase/admin';
 import { METHODS, methodNotAllowed } from 'utils/operations';
-import sendMail, { buildEmailLink } from 'utils/mailer';
+import sendMail, { buildInvitationMail } from 'utils/mail/sender';
 import checkAuth from 'utils/auth-middleware';
 import { isAdmin, canView } from 'utils/roles';
 
@@ -62,7 +62,7 @@ const handlers = async (req, res) => {
           getEmailSettings()
         );
 
-        await sendMail(buildEmailLink(email, link));
+        await sendMail(buildInvitationMail(email, link));
 
         return res.status(201).json({ success: true });
       } catch (err) {

@@ -7,6 +7,7 @@ import Alert from 'react-bootstrap/Alert';
 import { string, object } from 'yup';
 
 import Form from 'components/Form';
+import Meta from 'components/Layouts/Meta';
 import useSubmit from 'hooks/useSubmit';
 import useAuth from 'hooks/useAuth';
 import firebase from 'utils/firebase';
@@ -31,6 +32,7 @@ const VerificationForm = () => {
 
   return (
     <>
+      <Meta title="Verify your account" />
       <Form
         validationSchema={validationSchema}
         initialValues={initialValues}
