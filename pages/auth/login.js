@@ -73,7 +73,7 @@ const Login = () => {
               )}
               {isFulfilled(submitting) && (
                 <Alert variant="success" className="mt-3">
-                  Your One-Time sign-in link has been successfully sent to your
+                  Your verification code has been successfully sent to your
                   email address
                 </Alert>
               )}
