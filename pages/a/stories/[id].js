@@ -8,6 +8,8 @@ import Button from 'react-bootstrap/Button';
 import { useLazyAsync } from 'hooks/useBaseAsync';
 import { isPending, isFailed, isIdle, isFulfilled } from 'utils/operations';
 import NewStory from 'components/Stories/NewStory';
+import StoryActions from 'components/Stories/StoryActions';
+import StoryStatus from 'components/Stories/StoryStatus';
 import { getLayout } from 'components/Layouts/Admin';
 import Loading from 'components/Loading';
 import { Link } from 'components/Link';
@@ -39,7 +41,15 @@ const Story = () => {
           <Icon name="arrow-left" iconCss="mr-2" />
           <span>Stories</span>
         </Button>
-        <h2 className="my-3">Update story</h2>
+        <div className="d-flex justify-content-between align-items-center">
+          <h2 className="my-3">
+            <span>Update story</span>&nbsp;
+            <StoryStatus status={story.status} />
+          </h2>
+          {isFulfilled(loading) && (
+            <StoryActions {...story} onUpdate={onSuccess} />
+          )}
+        </div>
       </Col>
       <Col xs={12}>
         {isPending(loading) && <Loading />}
