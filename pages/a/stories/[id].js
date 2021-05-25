@@ -47,7 +47,7 @@ const Story = () => {
             <StoryStatus status={story.status} />
           </h2>
           {isFulfilled(loading) && (
-            <StoryActions {...story} onUpdate={onSuccess} />
+            <StoryActions {...story} detail onUpdate={onSuccess} />
           )}
         </div>
       </Col>

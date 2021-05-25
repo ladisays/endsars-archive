@@ -14,7 +14,7 @@ const verifyStory = (id, status) =>
 const approveStory = (id, status) =>
   axios.post(`/api/stories/${id}/approve`, { status });
 
-const Actions = ({ id, status, onUpdate }) => {
+const Actions = ({ id, status, detail = false, onUpdate }) => {
   const router = useRouter();
   const { role } = useAuth();
 
@@ -47,13 +47,15 @@ const Actions = ({ id, status, onUpdate }) => {
           <Icon name="ellipsis-h" />
         </Dropdown.Toggle>
         <Dropdown.Menu>
-          <Dropdown.Item
-            eventKey="edit"
-            onClick={() => {
-              router.push('/a/stories/[id]', `/a/stories/${id}`);
-            }}>
-            Edit
-          </Dropdown.Item>
+          {!detail && (
+            <Dropdown.Item
+              eventKey="edit"
+              onClick={() => {
+                router.push('/a/stories/[id]', `/a/stories/${id}`);
+              }}>
+              Edit
+            </Dropdown.Item>
+          )}
           <Dropdown.Item
             eventKey={statuses.VERIFIED}
             disabled={[statuses.APPROVED, statuses.VERIFIED].includes(status)}

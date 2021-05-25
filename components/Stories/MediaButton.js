@@ -41,8 +41,8 @@ const MediaButton = ({ name = 'media' }) => {
   const handleMediaChange = async (event) => {
     const sources = await getSources(event.target.files);
     const newValue = [...value, ...sources];
-    if (newValue.length > 4) {
-      const text = 'You can only select up to 4 files';
+    if (newValue.length > 10) {
+      const text = 'You can only select up to 10 files';
       helpers.setError(text);
       showAlert({ text, variant: 'danger' });
     } else {

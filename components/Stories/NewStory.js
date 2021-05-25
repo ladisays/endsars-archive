@@ -257,7 +257,10 @@ const NewStory = ({ story, onSuccess }) => {
                       {m.type === 'video' && (
                         // eslint-disable-next-line jsx-a11y/media-has-caption
                         <video controls playsInline preload="auto">
-                          <source src={m.src} type={m.file.type} />
+                          <source
+                            src={m.src}
+                            type={m?.mimetype || m?.file?.type}
+                          />
                         </video>
                       )}
                       {state[m.id] !== undefined ? (
