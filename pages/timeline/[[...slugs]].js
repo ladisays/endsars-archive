@@ -112,7 +112,6 @@ export const getStaticProps = async ({ params }) => {
   }
 
   props.error = error;
-  console.log(props);
 
   return {
     props,
