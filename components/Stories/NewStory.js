@@ -85,14 +85,14 @@ const validationSchema = (isAuthorized = false) =>
       .test(
         'eventDate',
         'Date is invalid',
-        (value) => value && moment(value, dateFormat).isValid()
+        (value) => value && moment.utc(value, dateFormat).isValid()
       )
       .required('Date is required')
   });
 
 const valid = (value) =>
   (moment.isMoment(value) && value.isSameOrBefore(new Date())) ||
-  moment(value).isSameOrBefore(new Date());
+  moment.utc(value).isSameOrBefore(new Date());
 
 const fetchCities = () => axios.get('/api/cities');
 
@@ -110,7 +110,7 @@ const NewStory = ({ story, onSuccess }) => {
       city: (story && story.city) || '',
       location: (story && story.location) || '',
       media: (story && story.media) || [],
-      eventDate: (story && moment(story.eventDate).format(dateFormat)) || ''
+      eventDate: (story && moment.utc(story.eventDate).format(dateFormat)) || ''
     }),
     [story]
   );
@@ -121,7 +121,7 @@ const NewStory = ({ story, onSuccess }) => {
     async (values) => {
       const updatedValues = {
         ...values,
-        eventDate: moment(values.eventDate, dateFormat).toDate()
+        eventDate: moment.utc(values.eventDate, dateFormat).toDate()
       };
 
       let media = [];

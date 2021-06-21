@@ -83,7 +83,7 @@ const DatePicker = ({
       {label && <FormLabel>{label}</FormLabel>}
       {mounted && (
         <Datetime
-          // utc
+          utc
           locale="en"
           timeFormat={timeFormat}
           dateFormat={format}

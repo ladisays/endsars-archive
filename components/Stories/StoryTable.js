@@ -1,18 +1,10 @@
 import Table from 'react-bootstrap/Table';
-import moment from 'moment';
 
+import { formatEventDate } from 'utils/timeline';
 import { Link } from 'components/Link';
 import StoryStatus from './StoryStatus';
 import StoryActions from './StoryActions';
 import styles from './story-table.module.sass';
-
-export const formatTime = (story = {}) => {
-  const timestamp = story.eventDate || story.createdAt;
-
-  return moment(timestamp).format('DD MMM');
-};
-
-const formatStoryDate = (date) => moment.utc(date).format('MMM D, YYYY');
 
 const StoryTable = ({ stories, onUpdate }) => {
   return (
@@ -44,7 +36,7 @@ const StoryTable = ({ stories, onUpdate }) => {
             </td>
             <td>
               <Link href={`/a/stories/${story.id}`}>
-                {formatStoryDate(story.eventDate)}
+                {formatEventDate(story.eventDate, 'll')}
               </Link>
             </td>
             <td className="text-center">
