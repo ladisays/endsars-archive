@@ -104,3 +104,21 @@ export const normalizeSlugs = (params = {}) => {
     storySlug
   };
 };
+
+export const formatStoryLocation = (story) => {
+  let result = '';
+
+  if (story?.location) {
+    result += story.location;
+  }
+
+  if (story?.city?.name) {
+    result += `${result ? ' | ' : ''}${story.city.name}`;
+  }
+
+  if (story?.city?.country?.name) {
+    result += `${result ? ', ' : ''}${story.city.country.name}`;
+  }
+
+  return result;
+};
