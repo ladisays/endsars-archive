@@ -79,8 +79,8 @@ const validationSchema = (isAuthorized = false) =>
     slug: isAuthorized ? string().required('Slug is required') : undefined,
     description: string(),
     author: string(),
-    city: isAuthorized ? string().required('City is required') : undefined,
-    location: string().required('Location is required'),
+    city: string().required('City is required'),
+    location: string(),
     eventDate: string()
       .test(
         'eventDate',

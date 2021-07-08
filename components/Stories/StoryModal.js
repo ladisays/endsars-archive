@@ -1,9 +1,7 @@
 import { useRouter } from 'next/router';
 import Modal from 'react-bootstrap/Modal';
-// import moment from 'moment';
 
-// import Icon from 'components/Icon';
-import { formatEventDate } from 'utils/timeline';
+import { formatEventDate, formatStoryLocation } from 'utils/timeline';
 import Media from './Media';
 import styles from './story-modal.module.sass';
 
@@ -32,7 +30,7 @@ const StoryModal = ({ id, title, description, ...story }) => {
           <div className={styles.description}>{description}</div>
           <div className={styles.meta}>
             <small>{formatEventDate(story.eventDate)}</small>
-            <small>{story.location}</small>
+            <small>{formatStoryLocation(story)}</small>
           </div>
         </div>
       </div>
